@@ -141,11 +141,24 @@ of the code, one place to fix a bug. Re-upload after changing anything under
 
 ## Status
 
-**Working now**
+**Verified running in Fabric**
 
-- The complete medallion — bronze schema, silver transforms, gold star schema, 34-expectation gate — deployed and runnable in Fabric with zero data, via `dl_00_bootstrap`.
-- WIP arithmetic locked by tests.
+The complete medallion has been executed end to end in the real Spark runtime:
+
+| Stage | Result |
+|---|---|
+| `dl_00_bootstrap` | 52 bronze + 6 control tables created, correctly typed |
+| `dl_10_bronze_to_silver` | 17 silver tables built, including the crosswalk |
+| `dl_30_build_gold` | 5 dimensions, 4 facts, 3 metadata tables |
+| `dl_40_dq_checks` | **34 expectations, 34 passed, 0 warnings, 0 blocking** |
+
+`dim_Date` generated correctly (7,670 days, 2015–2035, `MonthOffset` −139 to
++112). Every money column in `fct_WIP` landed as `float` — no DECIMAL
+contamination, which is the thing that silently breaks Direct Lake.
+
+- WIP arithmetic locked by tests: 66 assertions on the real gold SQL.
 - Both pipelines wired with `Succeeded` dependencies.
+- Semantic model built over the gold schema with relationships.
 
 **Blocked on credentials**
 

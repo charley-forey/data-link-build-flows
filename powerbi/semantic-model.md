@@ -62,9 +62,17 @@ value cannot be resolved joins to it rather than to nothing — a visible
 
 | Table | Purpose |
 |---|---|
+| `meta_Measures` | Single-row anchor holding **every measure**. Hidden. |
 | `meta_PipelineRun` | Drives `Pipeline Status`. |
 | `meta_DataQuality` | The Data Quality report page. |
 | `meta_UnmappedProjects` | The Controller's crosswalk to-do list. |
+
+`meta_Measures` is not optional bookkeeping. A measure cannot share a name with
+a column on the same table, and the natural names collide immediately — `EAC`
+and `Backlog` are both columns on `fct_WIP`. Hanging measures off the fact table
+would force names like "EAC Total" in front of the CEO. One hidden anchor table
+avoids the collision entirely and gives the report author one place to find
+every measure, grouped by display folder.
 
 ---
 
