@@ -45,7 +45,9 @@ combined AS (
     )
 ),
 deduped AS (
-    SELECT * EXCEPT (_rn) FROM (
+    -- Explicit column list, not `SELECT * EXCEPT (_rn)`: Fabric's Spark rejects
+    -- the EXCEPT-star form.
+    SELECT project_id, cost_code_id, cost_code, cost_code_name, full_code FROM (
         SELECT c.*, ROW_NUMBER() OVER (
             PARTITION BY project_id, cost_code_id
             -- Prefer the row that actually has a name.

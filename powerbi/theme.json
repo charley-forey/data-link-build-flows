@@ -1,0 +1,118 @@
+{
+  "name": "Data Link Financial Operating System",
+
+  "_comment_palette": "dataColors are CATEGORICAL - series identity only. Assigned in fixed order, never cycled. A ninth series is never a generated hue: fold it into Other, facet into small multiples, or use composite encoding. Validated: worst adjacent CVD dE 9.1 (protan), worst adjacent normal-vision dE 19.6, all eight inside the lightness band and above the chroma floor, on the #fcfcfb surface.",
+  "dataColors": [
+    "#2a78d6",
+    "#eb6834",
+    "#1baf7a",
+    "#eda100",
+    "#e87ba4",
+    "#008300",
+    "#4a3aa7",
+    "#e34948"
+  ],
+
+  "_comment_relief": "Slots 3, 4 and 5 (#1baf7a 2.74, #eda100 2.11, #e87ba4 2.62) sit below 3:1 against the light surface. That is not dismissable - any visual using them ships VISIBLE DATA LABELS or a table view alongside. See powerbi/report-spec.md.",
+
+  "_comment_series_cap": "Scatter, bubble and small-multiple visuals compare ALL pairs rather than adjacent ones, and the full eight cannot clear the floors that way. Those forms cap at the FIRST THREE slots, which validate all-pairs. Slot 4 puts yellow next to orange, and that pair fails.",
+
+  "_comment_status": "Status colors are RESERVED. They are never reused as a series color, and they never carry meaning alone - every status indicator in this report ships with an icon or a text label beside it. The measure `Project Risk Label` in measures.dax exists for exactly this: red and green are separated by only dE 7.1 under deuteranopia, below the dE 8 legibility floor, so colour alone is not readable for a meaningful share of people. This report goes to a CEO and a Controller, not a colour-vision panel.",
+  "good": "#0ca30c",
+  "neutral": "#fab219",
+  "bad": "#d03b3b",
+
+  "_comment_diverging": "Diverging scales (cost variance, fade/gain) use two hues with a NEUTRAL GRAY midpoint - never a hue at the middle, never a rainbow. Negative variance is the warm pole because over-running cost is the condition that needs attention.",
+  "minimum": "#2a78d6",
+  "center": "#8a8a85",
+  "maximum": "#d03b3b",
+  "null": "#6b6b6b",
+
+  "foreground": "#0b0b0b",
+  "foregroundNeutralSecondary": "#52514e",
+  "foregroundNeutralTertiary": "#8a8a85",
+  "background": "#fcfcfb",
+  "backgroundLight": "#f2f2f0",
+  "backgroundNeutral": "#e6e6e3",
+  "tableAccent": "#2a78d6",
+
+  "_comment_dark": "Power BI report themes are single-mode. The validated dark steps for the same eight hues on a #1a1a19 surface are: #3987e5, #d95926, #199e70, #c98500, #d55181, #008300, #9085e9, #e66767. Ship them as a second theme file if a dark variant is requested; do not machine-flip this one.",
+
+  "textClasses": {
+    "title": { "fontFace": "Segoe UI Semibold", "fontSize": 14, "color": "#0b0b0b" },
+    "header": { "fontFace": "Segoe UI Semibold", "fontSize": 12, "color": "#0b0b0b" },
+    "label": { "fontFace": "Segoe UI", "fontSize": 10, "color": "#52514e" },
+    "callout": { "fontFace": "Segoe UI Light", "fontSize": 36, "color": "#0b0b0b" }
+  },
+
+  "visualStyles": {
+    "*": {
+      "*": {
+        "_comment": "Grid and axes are RECESSIVE. The data is the figure; the chrome is the ground.",
+        "background": [{ "show": true, "color": { "solid": { "color": "#fcfcfb" } }, "transparency": 0 }],
+        "border": [{ "show": false }],
+        "visualHeader": [{ "show": false }],
+        "title": [{ "show": true, "fontColor": { "solid": { "color": "#0b0b0b" } }, "fontSize": 12, "fontFamily": "Segoe UI Semibold" }],
+        "categoryAxis": [{
+          "showAxisTitle": false,
+          "labelColor": { "solid": { "color": "#52514e" } },
+          "fontSize": 10,
+          "gridlineShow": false
+        }],
+        "valueAxis": [{
+          "showAxisTitle": false,
+          "labelColor": { "solid": { "color": "#52514e" } },
+          "fontSize": 10,
+          "gridlineShow": true,
+          "gridlineColor": { "solid": { "color": "#e6e6e3" } },
+          "gridlineThickness": 1,
+          "gridlineStyle": "solid"
+        }],
+        "labels": [{
+          "_comment": "On by default because three categorical slots fall below 3:1 on this surface and the relief rule requires visible labels. Turn them off only on a visual that already ships a table view.",
+          "show": true,
+          "color": { "solid": { "color": "#0b0b0b" } },
+          "fontSize": 9
+        }],
+        "legend": [{
+          "_comment": "A legend is always present for two or more series - identity is never carried by colour alone.",
+          "show": true,
+          "position": "Top",
+          "showTitle": false,
+          "labelColor": { "solid": { "color": "#52514e" } },
+          "fontSize": 10
+        }]
+      }
+    },
+    "card": {
+      "*": {
+        "labels": [{ "color": { "solid": { "color": "#0b0b0b" } }, "fontSize": 32, "fontFamily": "Segoe UI Light" }],
+        "categoryLabels": [{ "color": { "solid": { "color": "#52514e" } }, "fontSize": 10 }]
+      }
+    },
+    "tableEx": {
+      "*": {
+        "grid": [{ "gridVerticalWeight": 0, "gridHorizontalWeight": 1, "gridHorizontalColor": { "solid": { "color": "#e6e6e3" } }, "outlineWeight": 0 }],
+        "columnHeaders": [{ "fontColor": { "solid": { "color": "#0b0b0b" } }, "backColor": { "solid": { "color": "#f2f2f0" } }, "fontFamily": "Segoe UI Semibold" }]
+      }
+    },
+    "matrix": {
+      "*": {
+        "grid": [{ "gridVerticalWeight": 0, "gridHorizontalWeight": 1, "gridHorizontalColor": { "solid": { "color": "#e6e6e3" } }, "outlineWeight": 0 }],
+        "columnHeaders": [{ "fontColor": { "solid": { "color": "#0b0b0b" } }, "backColor": { "solid": { "color": "#f2f2f0" } }, "fontFamily": "Segoe UI Semibold" }]
+      }
+    },
+    "lineChart": {
+      "*": {
+        "lineStyles": [{ "strokeWidth": 2, "showMarker": true, "markerSize": 4 }],
+        "labels": [{ "show": false, "_comment": "Never a number on every point. Direct-label the last point or the extremes only." }]
+      }
+    },
+    "slicer": {
+      "*": {
+        "header": [{ "show": true, "fontColor": { "solid": { "color": "#52514e" } }, "fontSize": 10 }],
+        "items": [{ "fontColor": { "solid": { "color": "#0b0b0b" } }, "fontSize": 10 }]
+      }
+    }
+  }
+}

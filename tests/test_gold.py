@@ -11,8 +11,9 @@ the cumulative change-order roll-up. It does not verify Spark dialect edge
 cases; those surface on the first real run and are caught by the DQ suite.
 
 The gold files deliberately avoid Spark-only syntax so this works with almost no
-compatibility shim. `SELECT * EXCEPT (...)` is the one exception and is mapped
-below.
+compatibility shim. Every shim is a place where the test and production diverge,
+so they are kept to date-function spellings only - never to anything that could
+let a statement pass here and fail in Spark.
 
     python tests/test_gold.py
 """
@@ -142,7 +143,10 @@ def to_duckdb(sql: str) -> str:
     quotes. CURRENT_TIMESTAMP() is a Spark function call, a bare keyword in
     DuckDB.
     """
-    sql = re.sub(r"\*\s+EXCEPT\s*\(", "* EXCLUDE (", sql, flags=re.IGNORECASE)
+    # NOTE: there is deliberately no `SELECT * EXCEPT (...)` -> EXCLUDE mapping.
+    # DuckDB accepts the EXCEPT-star form and Fabric's Spark rejects it, so a
+    # shim here would let a statement pass every offline test and then fail in
+    # production. It did exactly that once. The SQL now spells columns out.
     sql = re.sub(r"CURRENT_TIMESTAMP\s*\(\s*\)", "CURRENT_TIMESTAMP", sql, flags=re.IGNORECASE)
     # dim_Date only: Spark generates a date range with explode(sequence(...)) and
     # formats month names with Java patterns. DuckDB spells both differently.

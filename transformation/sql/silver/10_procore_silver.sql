@@ -188,7 +188,17 @@ WITH parsed AS (
 -- ONE ROW PER PROJECT + WBS CODE, LATEST SNAPSHOT WINS. Bronze keeps every
 -- shape the API ever returned; "the budget as of the latest pull" is what this
 -- table means.
-SELECT * EXCEPT (_rn) FROM (
+-- Columns are listed explicitly rather than `SELECT * EXCEPT (_rn)`. Fabric's
+-- Spark rejects the EXCEPT-star form outright, and it is exactly the kind of
+-- dialect difference an offline DuckDB test will happily accept - so the
+-- portable spelling is the one that ships.
+SELECT
+    budget_line_id, project_id, wbs_code_id, cost_code_id, cost_code,
+    root_cost_code_id, root_cost_code, category_id, category, biller, biller_type,
+    original_budget, budget_modifications, approved_budget_changes, revised_budget,
+    committed_cost, direct_cost, job_to_date_cost, estimated_cost_at_completion,
+    forecast_to_complete, projected_over_under, _ingested_at, _batch_id
+FROM (
     SELECT parsed.*,
            ROW_NUMBER() OVER (
                PARTITION BY project_id, COALESCE(wbs_code_id, cost_code_id, budget_line_id)
