@@ -538,6 +538,28 @@ for result in results:
 '''
             ),
             cell(
+                '''\
+# Rebuild the reporting metadata NOW, after the results exist.
+#
+# Built during the gold step these would always be one run stale: the Data
+# Quality page would report "0 warnings" for a run that recorded one, which is
+# worse than showing nothing, because it looks authoritative.
+import glob
+import os
+
+from fabric_common import split_sql_statements
+
+for path in sorted(glob.glob(f"{LIB}/sql/meta/*.sql")):
+    with open(path, encoding="utf-8") as handle:
+        statements = split_sql_statements(handle.read())
+    for statement in statements:
+        spark.sql(statement)
+    print(f"  {os.path.basename(path):40s} {len(statements)} statement(s)")
+
+print(f"\\nmeta_DataQuality: {spark.table('meta_DataQuality').count()} row(s) from this run")
+'''
+            ),
+            cell(
                 DIAG_HELPER
                 + '''
 write_diag("dq_checks", {

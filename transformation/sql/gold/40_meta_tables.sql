@@ -17,44 +17,16 @@
 CREATE OR REPLACE TABLE meta_Measures AS
 SELECT CAST(1 AS INT) AS Anchor;
 
-CREATE OR REPLACE TABLE meta_PipelineRun AS
-SELECT
-    batch_id                     AS BatchId,
-    MAX(logged_at)               AS RunAt,
-    COUNT(*)                     AS StepCount,
-    SUM(row_count)               AS RowsWritten,
-    MAX(CASE WHEN status <> 'ok' THEN 1 ELSE 0 END) = 0 AS Succeeded
-FROM dl_meta_run_log
-GROUP BY batch_id;
-
--- The DQ result set, shaped for the report's Data Quality page. Only the most
--- recent run: history lives in dl_dq_results, but a page showing every failure
--- ever recorded is a page nobody reads.
-CREATE OR REPLACE TABLE meta_DataQuality AS
-WITH latest AS (
-    SELECT MAX(checked_at) AS checked_at FROM dl_dq_results
-)
-SELECT
-    r.expectation                AS Expectation,
-    r.table_name                 AS TableName,
-    r.severity                   AS Severity,
-    r.failing_rows               AS FailingRows,
-    r.passed                     AS Passed,
-    r.description                AS Description,
-    r.checked_at                 AS CheckedAt,
-    -- Sort order plus a text label, so the page never encodes status in colour
-    -- alone. Red and green are not distinguishable for a meaningful share of
-    -- readers, and this report goes to a CEO and a Controller, not a colour
-    -- vision panel.
-    CASE WHEN r.passed THEN 3
-         WHEN r.severity = 'error' THEN 1
-         ELSE 2 END              AS SeveritySort,
-    CASE WHEN r.passed THEN 'Passed'
-         WHEN r.severity = 'error' THEN 'Blocking'
-         ELSE 'Warning' END      AS StatusLabel
-FROM dl_dq_results r
-CROSS JOIN latest l
-WHERE r.checked_at >= l.checked_at - INTERVAL 1 HOURS;
+-- meta_DataQuality and meta_PipelineRun are NOT built here.
+--
+-- They are derived from dl_dq_results and dl_meta_run_log, which the quality
+-- gate writes AFTER this file runs. Building them here would publish a Data
+-- Quality page that always shows the PREVIOUS run - a report that says
+-- "0 warnings" while the run that just finished recorded one. Worse than no
+-- page at all, because it looks authoritative.
+--
+-- dl_40_dq_checks rebuilds both once its own results exist. See
+-- transformation/sql/meta/50_meta_reporting.sql.
 
 -- The crosswalk review queue, promoted to gold so it can be a report page. This
 -- is the Controller's actual to-do list.
