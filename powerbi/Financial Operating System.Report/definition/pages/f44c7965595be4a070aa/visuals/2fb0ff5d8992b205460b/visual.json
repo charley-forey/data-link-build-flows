@@ -1,0 +1,239 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "2fb0ff5d8992b205460b",
+  "position": {
+    "x": 16,
+    "y": 124,
+    "z": 1003,
+    "height": 420,
+    "width": 1248,
+    "tabOrder": 1003
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_Project"
+                    }
+                  },
+                  "Property": "ProjectName"
+                }
+              },
+              "queryRef": "dim_Project.ProjectName",
+              "nativeQueryRef": "ProjectName"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Revised Contract"
+                }
+              },
+              "queryRef": "_Measures.Revised Contract",
+              "nativeQueryRef": "Revised Contract"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Original Budget"
+                }
+              },
+              "queryRef": "_Measures.Original Budget",
+              "nativeQueryRef": "Original Budget"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Estimated Cost at Completion"
+                }
+              },
+              "queryRef": "_Measures.Estimated Cost at Completion",
+              "nativeQueryRef": "Estimated Cost at Completion"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Cost to Date"
+                }
+              },
+              "queryRef": "_Measures.Cost to Date",
+              "nativeQueryRef": "Cost to Date"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Percent Complete"
+                }
+              },
+              "queryRef": "_Measures.Percent Complete",
+              "nativeQueryRef": "Percent Complete"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Earned Revenue"
+                }
+              },
+              "queryRef": "_Measures.Earned Revenue",
+              "nativeQueryRef": "Earned Revenue"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Billed to Date"
+                }
+              },
+              "queryRef": "_Measures.Billed to Date",
+              "nativeQueryRef": "Billed to Date"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Over Billing"
+                }
+              },
+              "queryRef": "_Measures.Over Billing",
+              "nativeQueryRef": "Over Billing"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Under Billing"
+                }
+              },
+              "queryRef": "_Measures.Under Billing",
+              "nativeQueryRef": "Under Billing"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Gross Profit at Completion"
+                }
+              },
+              "queryRef": "_Measures.Gross Profit at Completion",
+              "nativeQueryRef": "Gross Profit at Completion"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "GP % at Completion"
+                }
+              },
+              "queryRef": "_Measures.GP % at Completion",
+              "nativeQueryRef": "GP % at Completion"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Backlog Value"
+                }
+              },
+              "queryRef": "_Measures.Backlog Value",
+              "nativeQueryRef": "Backlog Value"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "_Measures"
+                  }
+                },
+                "Property": "Revised Contract"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Work in progress schedule: one row per project with contract, budget, forecast cost, cost to date, percent complete, earned revenue, billings, over and under billing, gross profit and backlog'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "048b298c6399ce43a4ce",
+  "position": {
+    "x": 522,
+    "y": 490,
+    "z": 1010,
+    "height": 214,
+    "width": 742,
+    "tabOrder": 1010
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "CounterpartyName"
+                }
+              },
+              "queryRef": "fct_Aging.CounterpartyName",
+              "nativeQueryRef": "CounterpartyName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "DocNumber"
+                }
+              },
+              "queryRef": "fct_Aging.DocNumber",
+              "nativeQueryRef": "DocNumber"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "DaysPastDue"
+                }
+              },
+              "queryRef": "fct_Aging.DaysPastDue",
+              "nativeQueryRef": "DaysPastDue"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "OpenBalance"
+                }
+              },
+              "queryRef": "fct_Aging.OpenBalance",
+              "nativeQueryRef": "OpenBalance"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_Aging"
+                  }
+                },
+                "Property": "OpenBalance"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Collection risk: documents more than 90 days past due'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "8be6874d7bc8c6baa0f0",
+  "position": {
+    "x": 770,
+    "y": 242,
+    "z": 1006,
+    "height": 462,
+    "width": 494,
+    "tabOrder": 1006
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_UnmappedProjects"
+                    }
+                  },
+                  "Property": "ProjectNumber"
+                }
+              },
+              "queryRef": "meta_UnmappedProjects.ProjectNumber",
+              "nativeQueryRef": "ProjectNumber"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_UnmappedProjects"
+                    }
+                  },
+                  "Property": "ProjectName"
+                }
+              },
+              "queryRef": "meta_UnmappedProjects.ProjectName",
+              "nativeQueryRef": "ProjectName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_UnmappedProjects"
+                    }
+                  },
+                  "Property": "OriginalContract"
+                }
+              },
+              "queryRef": "meta_UnmappedProjects.OriginalContract",
+              "nativeQueryRef": "OriginalContract"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_UnmappedProjects"
+                    }
+                  },
+                  "Property": "ProposedQboJobName"
+                }
+              },
+              "queryRef": "meta_UnmappedProjects.ProposedQboJobName",
+              "nativeQueryRef": "ProposedQboJobName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_UnmappedProjects"
+                    }
+                  },
+                  "Property": "CrosswalkConfidence"
+                }
+              },
+              "queryRef": "meta_UnmappedProjects.CrosswalkConfidence",
+              "nativeQueryRef": "CrosswalkConfidence"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_UnmappedProjects"
+                    }
+                  },
+                  "Property": "Reason"
+                }
+              },
+              "queryRef": "meta_UnmappedProjects.Reason",
+              "nativeQueryRef": "Reason"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "meta_UnmappedProjects"
+                  }
+                },
+                "Property": "OriginalContract"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Unmapped projects: the Controller's crosswalk to-do list, with the proposed QuickBooks job and match confidence'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

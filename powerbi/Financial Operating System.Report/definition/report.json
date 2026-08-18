@@ -1,0 +1,51 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.3.0/schema.json",
+  "themeCollection": {
+    "baseTheme": {
+      "name": "CY26SU07",
+      "type": "SharedResources",
+      "reportVersionAtImport": {
+        "visual": "2.10.0",
+        "report": "3.3.0",
+        "page": "2.1.0"
+      }
+    },
+    "customTheme": {
+      "name": "DataLink",
+      "type": "RegisteredResources",
+      "reportVersionAtImport": {
+        "visual": "2.10.0",
+        "report": "3.3.0",
+        "page": "2.1.0"
+      }
+    }
+  },
+  "resourcePackages": [
+    {
+      "name": "SharedResources",
+      "type": "SharedResources",
+      "items": [
+        {
+          "name": "CY26SU07",
+          "path": "BaseThemes/CY26SU07.json",
+          "type": "BaseTheme"
+        }
+      ]
+    },
+    {
+      "name": "RegisteredResources",
+      "type": "RegisteredResources",
+      "items": [
+        {
+          "name": "DataLink",
+          "path": "DataLink.json",
+          "type": "CustomTheme"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "useStylableVisualContainerHeader": true,
+    "isPersistentUserStateDisabled": false
+  }
+}

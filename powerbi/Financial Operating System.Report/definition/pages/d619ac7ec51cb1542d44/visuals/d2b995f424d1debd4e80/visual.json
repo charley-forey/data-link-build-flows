@@ -1,0 +1,127 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "d2b995f424d1debd4e80",
+  "position": {
+    "x": 646,
+    "y": 490,
+    "z": 1010,
+    "height": 214,
+    "width": 618,
+    "tabOrder": 1010
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_ChangeOrder"
+                    }
+                  },
+                  "Property": "ChangeOrderNumber"
+                }
+              },
+              "queryRef": "fct_ChangeOrder.ChangeOrderNumber",
+              "nativeQueryRef": "ChangeOrderNumber"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_ChangeOrder"
+                    }
+                  },
+                  "Property": "Title"
+                }
+              },
+              "queryRef": "fct_ChangeOrder.Title",
+              "nativeQueryRef": "Title"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_ChangeOrder"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "fct_ChangeOrder.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_ChangeOrder"
+                    }
+                  },
+                  "Property": "Amount"
+                }
+              },
+              "queryRef": "fct_ChangeOrder.Amount",
+              "nativeQueryRef": "Amount"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_ChangeOrder"
+                    }
+                  },
+                  "Property": "EffectiveDate"
+                }
+              },
+              "queryRef": "fct_ChangeOrder.EffectiveDate",
+              "nativeQueryRef": "EffectiveDate"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_ChangeOrder"
+                  }
+                },
+                "Property": "EffectiveDate"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Change order log with status, value and effective date'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

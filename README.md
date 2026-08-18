@@ -2,11 +2,15 @@
 
 A Microsoft Fabric platform that connects **Procore**, **QuickBooks Online** and
 **HubSpot** into one governed source of truth, and produces the WIP/EAC, project
-financial performance and backlog reporting that the Controller and Ops team
-currently assemble by hand every month.
+financial performance, backlog, pipeline forecast, cash forecast, receivables
+and capacity reporting that the Controller and Ops team currently assemble by
+hand every month.
 
 Built for Data Link Technology Services, a commercial low-voltage contractor
 in Arizona.
+
+**Status: both phases built, running end to end on live sandbox data, and
+published as an 11-page Power BI report.**
 
 ---
 
@@ -17,19 +21,21 @@ in Arizona.
 | Item | Name |
 |---|---|
 | Lakehouse | `DL_Lakehouse` |
-| Notebooks | `dl_00_bootstrap`, `dl_01_extract_procore`, `dl_02_extract_qbo`, `dl_10_bronze_to_silver`, `dl_30_build_gold`, `dl_40_dq_checks` |
+| Notebooks | `dl_00_bootstrap`, `dl_01_extract_procore`, `dl_02_extract_qbo`, `dl_05_land_to_bronze`, `dl_10_bronze_to_silver`, `dl_30_build_gold`, `dl_40_dq_checks` |
 | Pipelines | `DL_Ingest_Pipeline` (extraction), `DL_Master_Pipeline` (medallion + gate) |
+| Semantic model | `Data Link Financial Operating System` — Direct Lake, 15 tables, 68 measures |
+| Report | `Financial Operating System` — 11 pages, 110 visuals |
 
 **This repository** — the source of truth. Fabric is a deployment target; a
 mis-created item is fixed by re-running a deploy, not by clicking.
 
 ```
-docs/            architecture, WIP methodology, runbook
+docs/            architecture, WIP methodology, runbook, client summary
 platform/lib/    the shared library, deployed to Files/lib in the lakehouse
 ingestion/       one endpoint registry per source (YAML)
 transformation/  the medallion SQL and the data-quality suite
-powerbi/         semantic model spec, DAX measures, report spec, theme
-scripts/         notebook generator, QBO authorisation, deploy helpers
+powerbi/         semantic model spec, DAX measures, report spec, theme, PBIR
+scripts/         generators and deploy helpers (all dry-run by default)
 tests/           offline tests - no network, no Fabric, no Spark
 ```
 
@@ -56,7 +62,7 @@ HubSpot REST ─┘        │
 
 | Prefix | Holds | Rule |
 |---|---|---|
-| `dl_bronze_` | Raw API payload **unparsed**, plus audit columns | Never transform here. Bronze cannot drop a column it never parsed, so a transform bug is a re-run, not a re-extract — and re-extracting is what Procore's 600 requests/hour makes painful. |
+| `dl_bronze_` | Raw API payload **unparsed**, plus audit columns | Never transform here. Bronze cannot drop a column it never parsed, so a transform bug is a re-run, not a re-extract — and re-extracting is what Procore's request quota makes painful. |
 | `dl_silver_` | Typed, TRIMmed, validated | Rejected rows are logged with a reason, **never dropped**. |
 | `dim_` / `fct_` / `meta_` | The star schema | Column names match the semantic model exactly; the DAX reads them by name. |
 | `dl_meta_` | Pipeline state | watermarks, run log, token store |
@@ -92,14 +98,14 @@ a report page rather than a quietly smaller total.
 
 ### The gate
 
-`dl_40_dq_checks` runs 34 expectations. **Every expectation is a SQL predicate
-that returns the failing rows** — a failure is a set of rows someone can open,
-not a red light.
+`dl_40_dq_checks` runs **53 expectations** (35 blocking, 18 warning). **Every
+expectation is a SQL predicate that returns the failing rows** — a failure is a
+set of rows someone can open, not a red light.
 
 Two severities, and the split is load-bearing:
 
 - **ERROR** stops the pipeline. Reserved for things that make a number *wrong*: a duplicate dimension key, an orphaned fact, an accounting identity that does not hold.
-- **WARN** records and continues. For things true of the real data that would be dishonest to hide: an unmapped project, a Procore↔QuickBooks variance.
+- **WARN** records and continues. For things true of the real data that would be dishonest to hide: an unmapped project, a Procore↔QuickBooks variance, an overdue payable.
 
 The instinct to make everything an ERROR is wrong. A pipeline that blocks on a
 real business condition gets muted within a week, and then the blocking checks
@@ -113,98 +119,130 @@ that blocks is genuinely a wrongness.
 ### Offline tests — no network, no Fabric
 
 ```bash
-python tests/test_gold.py
+python scripts/run_tests.py
 ```
 
-Runs the **real** gold SQL through DuckDB against fixtures: 66 assertions
-covering every WIP identity, plus 26 of the data-quality expectations executed
-for real. The file under test is the one that ships.
+**203 assertions.** Runs the **real** silver and gold SQL through DuckDB against
+fixtures, plus 45 of the data-quality expectations executed for real. The files
+under test are the ones that ship.
 
-### Regenerate the notebooks
+### Regenerate the notebooks and the report
 
 ```bash
-python scripts/make_notebooks.py
+python scripts/make_notebooks.py     # .py -> .ipynb, every cell compiled
+python scripts/make_report.py        # page spec -> PBIR, every field checked
 ```
 
-Notebooks are **generated, never hand-edited** — a hand-edited notebook is
-overwritten by the next deploy and the change is lost silently. Every code cell
-is compiled before it is written.
+Both are **generated, never hand-edited**. A hand-edited notebook is overwritten
+by the next deploy and the change is lost silently.
+
+`make_report.py` validates every field reference against `powerbi/model-schema.json`
+before writing. This matters more than it sounds: a mistyped measure name does
+not fail at publish time — Power BI renders the visual **empty**, which is
+indistinguishable from "no data matched the filter".
 
 ### Deploy to Fabric
 
-The library, SQL and configs live in the lakehouse `Files/` area
-(`lib/`, `sql/`, `config/`, `dq/`, `reference/`) so notebooks stay thin: one copy
-of the code, one place to fix a bug. Re-upload after changing anything under
-`platform/`, `transformation/` or `ingestion/`.
+```bash
+python scripts/deploy_files.py --apply    # library, SQL, configs -> Files/
+python scripts/deploy_report.py --apply   # PBIR -> the published report
+```
+
+Both dry-run without `--apply`. `deploy_files.py` is the command that makes
+"what is in Fabric" equal "what is in the repo" — the notebooks are thin, and
+run whatever SQL was last uploaded.
+
+Auth is the Azure CLI (`az login`); neither script reads or prints a secret.
 
 ---
 
 ## Status
 
-**Verified running in Fabric**
-
-The complete medallion has been executed end to end in the real Spark runtime:
+**The full medallion runs end to end in Fabric on live sandbox data.**
 
 | Stage | Result |
 |---|---|
-| `dl_00_bootstrap` | 52 bronze + 6 control tables created, correctly typed |
-| `dl_10_bronze_to_silver` | 17 silver tables built, including the crosswalk |
-| `dl_30_build_gold` | 5 dimensions, 4 facts, 3 metadata tables |
-| `dl_40_dq_checks` | **34 expectations, 34 passed, 0 warnings, 0 blocking** |
+| `dl_05_land_to_bronze` | JSONL from all three sources landed to bronze |
+| `dl_10_bronze_to_silver` | silver tables built, including the crosswalk |
+| `dl_30_build_gold` | 7 dimensions, 8 facts, 3 metadata tables |
+| `dl_40_dq_checks` | **53 expectations, 0 blocking failures, 3 warnings** |
 
-`dim_Date` generated correctly (7,670 days, 2015–2035, `MonthOffset` −139 to
-+112). Every money column in `fct_WIP` landed as `float` — no DECIMAL
-contamination, which is the thing that silently breaks Direct Lake.
+The three warnings are real conditions in the data, not defects: unattributed
+QuickBooks cost (45 rows), unattributed labour hours (5), and overdue payables (4).
 
-- WIP arithmetic locked by tests: 66 assertions on the real gold SQL.
-- Both pipelines wired with `Succeeded` dependencies.
-- Semantic model built over the gold schema with relationships.
+**What the report shows, read back out of the published model**
 
-**Live source verification**
+| Measure | Value |
+|---|---|
+| Revised contract | $1,099,999 |
+| Gross profit at completion | $99 — flagged *Watch — thin margin* |
+| Backlog | $1,099,999 |
+| AR outstanding | $5,281.52 across 20 invoices; $1,525.50 overdue (28.9%) |
+| AP outstanding | $1,602.67 across 5 bills, 4 overdue |
+| Net working capital | $3,678.85 |
+| Weighted pipeline | $0 — correctly zero, the HubSpot portal has no deals |
+| Utilisation | 53.3% (10 billable hours of 18.75) |
 
-| Source | State | Evidence |
-|---|---|---|
-| **Procore** | connected | 374 rows across 24 endpoints, landed to bronze. Includes budget-view detail rows (the EAC spine). |
-| **HubSpot** | connected | Authenticates on the `pat-` service token; 1 deal pipeline, 7 stages. Confirms the `2026-03` API path. |
-| **QuickBooks** | blocked | Needs one interactive OAuth consent: `python scripts/qbo_authorize.py` |
+Sandbox figures. The point is that every one is derived rather than entered, and
+every identity holds.
 
-```bash
-python scripts/smoke_test.py            # one read-only call per source
-python scripts/extract_local.py --source procore   # full registry -> JSONL
-```
+**Source connectivity**
 
-`smoke_test.py` exists because a credential problem found locally costs seconds,
-while the same problem found inside a Fabric notebook costs a Spark session
-startup and a trip through the driver logs.
+| Source | State |
+|---|---|
+| **Procore** | connected — 374 rows across 24 endpoints, including the budget-view detail rows that carry EAC |
+| **QuickBooks** | connected — chart of accounts, customers and jobs, invoices, bills, purchases, the general ledger, open AR/AP and time activities |
+| **HubSpot** | connected — 1 deal pipeline, 7 stages with win probabilities. No deals in the portal yet, so the forecast is wired and reads zero |
 
-**Four defects the live APIs exposed** (none of which offline tests could catch):
+---
 
-1. `PROCORE_SANDBOX_URL` held a *browser* URL, so every request was built under `/company/home`. `normalise_base_url()` now reduces any input to a bare origin.
-2. The vendors path was wrong — `/rest/v1.0/vendors` (query-scoped), not `/companies/{id}/vendors`.
-3. A project without a tool enabled answers 403/404, and that was aborting the whole endpoint for every other project. Now `ToolUnavailable`: counted, skipped, reported.
-4. **The budget money columns are named with spaces** (`Job to Date Costs`). `$.dot` notation cannot parse those — it returns NULL, COALESCEs to 0, and yields a WIP schedule that passes every accounting identity while being entirely wrong. Now bracket notation, pinned by `tests/test_silver_keys.py` against a captured payload.
+## Defects the live data exposed
 
-Also measured: Procore's real quota on this tenant is **25 requests per ~10s window**, not the 600/hour that is widely quoted. The rate-limit reserve now scales to the limit the API reports.
+None of these were reachable by offline testing, and each one produced a number
+that looked plausible.
 
-**Not built yet (phase 2)**
+1. **Budget columns named with spaces.** Procore returns `Job to Date Costs`, `Revised Budget`, `Estimated Cost at Completion`. `$.dot` notation cannot parse a name with spaces — it returns NULL, COALESCEs to 0, and yields a WIP schedule where every project shows zero cost, 0% complete and 100% margin. It satisfies every accounting identity and is entirely wrong. Now bracket notation, pinned by `tests/test_silver_keys.py` against a captured payload.
 
-- HubSpot ingestion. The extractor and config exist; the gold arm is declared as an empty typed view (`sv_deals`) so everything downstream compiles and tests today, and goes live by changing that one view.
-- Cash forecast, AR/collections, capacity planning.
-- The Power BI report. The semantic model is buildable programmatically; the report is authored as a PBIP project and published — the Fabric MCP server has no report-creation tool.
+2. **Hours already billed did not count as billable.** QuickBooks records a time entry as `Billable`, `NotBillable` or `HasBeenBilled`. The test matched `LIKE 'BILLABLE%'`, catching the first and silently missing the third — hours already invoiced to a client, the most billable state there is. Utilisation read 26.7% against a true 53.3%. Now matched against the real three-value enum.
+
+3. **Ageing buckets sorted alphabetically.** The chart rendered `1-30, 31-60, 61-90, Current` — `Current` last. A sort by a column the visual does not display is silently ignored. Fixed with `sortByColumn` in the model, and `make_report.py` now refuses to emit a visual that sorts by a field it does not project.
+
+4. **Direct Lake bound six tables to names that did not exist.** Delta directories in OneLake are lowercase; the table-add API passes the given name through verbatim, so `fct_Aging` bound to a path that was not there. The refresh failed outright rather than silently, which is the one mercy here.
+
+5. **One project could take down an entire feed.** Procore answers 403/404 for a project without a given tool enabled, which is normal. That was aborting the whole endpoint and losing every project that *did* have data. Now counted and skipped.
+
+6. **The quality page reported the previous run.** The table feeding it was built one step too early, so it always showed the *last* run's results. Found by querying the live report rather than trusting the pipeline's green tick.
+
+Also measured: Procore's real quota on this tenant is **25 requests per ~10s
+window**, not the 600/hour that is widely quoted. The rate-limit reserve now
+scales to whatever the API reports.
 
 ---
 
 ## Operational hazards worth knowing
 
-1. **The QuickBooks refresh token rotates on every use** and hard-expires at 100 days. `dl_02_extract_qbo` persists the new one to `dl_meta_token` *before* pulling any data. If that write is ever skipped, the integration works until the access token expires and then fails permanently — an hour after whoever changed it stopped watching. Two expectations watch the token's age (warn at 60 days, block at 85).
+1. **The QuickBooks refresh token rotates on every use** and hard-expires at 100 days. `dl_02_extract_qbo` persists the new one *before* pulling any data. If that write is ever skipped, the integration works until the access token expires and then fails permanently — an hour after whoever changed it stopped watching. Two expectations watch the token's age (warn at 60 days, block at 85).
 
-2. **Procore allows 600 requests/hour** and does **not** send `Retry-After` on a 429 — it sends `X-Rate-Limit-Reset`, a Unix epoch. The session gates on the remaining-quota header before spending a request it does not have, and raises `QuotaExhausted` rather than hanging.
+2. **Procore does not send `Retry-After` on a 429** — it sends `X-Rate-Limit-Reset`, a Unix epoch. The session gates on the remaining-quota header before spending a request it does not have, and raises `QuotaExhausted` rather than hanging.
 
 3. **`Procore-Company-Id` must be sent on every API version.** Without it, v1.0 project-scoped endpoints return **404**, not 403 — which reads as "this project has no such tool" and looks for hours like a permissions problem.
 
 4. **Procore returns a different column set per budget view.** The registry pins one view by name. Confirm it before the first production run.
 
-5. **A type mismatch makes Direct Lake drop a table silently.** It appears as a missing table, not an error. `dl_30_build_gold` writes the gold schema to `Files/_diag/gold_schema.json` so the semantic model can be generated from what actually exists.
+5. **A type mismatch makes Direct Lake drop a table silently.** It appears as a missing table, not an error. `dl_30_build_gold` writes the gold schema to `Files/_diag/gold_schema.json` so the model can be generated from what actually exists.
+
+6. **The SQL endpoint lags the lakehouse.** It has reported zero rows for populated tables. Spark is the authority; see the runbook for the trust order.
+
+7. **Spark capacity contention returns HTTP 430**, not a queue. A notebook submitted while another session is still releasing fails immediately with `TooManyRequestsForCapacity`. Retry; it is not a defect.
+
+---
+
+## Known gaps
+
+- **The custom theme does not bind through the REST publish path.** The report renders on the Fabric base theme — a legible, accessibility-tuned palette — and `powerbi/theme.json` applies when the PBIP is opened in Desktop. Cosmetic only: no status is encoded in colour alone anywhere, so the accessibility guarantees hold regardless.
+- **Slicers are not synced across pages.** PBIR's sync-group schema could not be verified against a working report, and inventing one produces slicers that look synced and are not. Each page filters correctly on its own; enabling cross-page sync is one setting in Desktop.
+- **Labour cost is zero** wherever QuickBooks carries no cost rate, which is everywhere in the sandbox. Labour margin is overstated by exactly that amount until real cost rates exist.
+- **The cash forecast excludes unbilled backlog** — deliberately. Turning backlog into expected cash needs a billing schedule and collection assumptions nobody has provided.
 
 ---
 
@@ -212,7 +250,11 @@ Also measured: Procore's real quota on this tenant is **25 requests per ~10s win
 
 | File | Contents |
 |---|---|
-| `docs/04-wip-methodology.md` | Every financial definition, the worked example, and the seven decisions that are easy to get wrong |
+| `docs/00-client-summary.md` | What was built and what it replaces, in business terms |
+| `docs/01-architecture.md` | The platform in detail |
+| `docs/02-source-mapping.md` | Every model field → system → verified endpoint |
+| `docs/04-wip-methodology.md` | Every financial definition, the worked example, and the decisions that are easy to get wrong |
 | `docs/05-runbook.md` | Daily operation, failure modes, re-authorisation |
-| `powerbi/measures.dax` | The DAX library |
+| `powerbi/report-spec.md` | The 11 pages and why each visual is the form it is |
+| `powerbi/measures.dax`, `measures-phase2.dax` | The DAX library |
 | `platform/naming-standards.md` | Naming conventions |

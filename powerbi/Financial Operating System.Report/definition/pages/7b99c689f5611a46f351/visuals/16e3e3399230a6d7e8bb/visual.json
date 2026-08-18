@@ -1,0 +1,53 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "16e3e3399230a6d7e8bb",
+  "position": {
+    "x": 16,
+    "y": 124,
+    "z": 1001,
+    "height": 104,
+    "width": 303,
+    "tabOrder": 1001
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Blocking DQ Failures"
+                }
+              },
+              "queryRef": "_Measures.Blocking DQ Failures",
+              "nativeQueryRef": "Blocking DQ Failures"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Blocking data quality failures'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

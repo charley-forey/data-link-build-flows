@@ -1,0 +1,141 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "23be71e240f74cfc1a45",
+  "position": {
+    "x": 16,
+    "y": 242,
+    "z": 1005,
+    "height": 462,
+    "width": 742,
+    "tabOrder": 1005
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_DataQuality"
+                    }
+                  },
+                  "Property": "Expectation"
+                }
+              },
+              "queryRef": "meta_DataQuality.Expectation",
+              "nativeQueryRef": "Expectation"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_DataQuality"
+                    }
+                  },
+                  "Property": "TableName"
+                }
+              },
+              "queryRef": "meta_DataQuality.TableName",
+              "nativeQueryRef": "TableName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_DataQuality"
+                    }
+                  },
+                  "Property": "Severity"
+                }
+              },
+              "queryRef": "meta_DataQuality.Severity",
+              "nativeQueryRef": "Severity"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_DataQuality"
+                    }
+                  },
+                  "Property": "StatusLabel"
+                }
+              },
+              "queryRef": "meta_DataQuality.StatusLabel",
+              "nativeQueryRef": "StatusLabel"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_DataQuality"
+                    }
+                  },
+                  "Property": "FailingRows"
+                }
+              },
+              "queryRef": "meta_DataQuality.FailingRows",
+              "nativeQueryRef": "FailingRows"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "meta_DataQuality"
+                    }
+                  },
+                  "Property": "Description"
+                }
+              },
+              "queryRef": "meta_DataQuality.Description",
+              "nativeQueryRef": "Description"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "meta_DataQuality"
+                  }
+                },
+                "Property": "FailingRows"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Data quality expectation results with severity and an explicit pass or fail label'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

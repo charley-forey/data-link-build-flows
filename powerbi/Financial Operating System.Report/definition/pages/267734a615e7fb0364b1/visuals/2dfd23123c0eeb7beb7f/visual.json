@@ -1,0 +1,89 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "2dfd23123c0eeb7beb7f",
+  "position": {
+    "x": 16,
+    "y": 242,
+    "z": 1007,
+    "height": 236,
+    "width": 618,
+    "tabOrder": 1007
+  },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_CashForecast"
+                    }
+                  },
+                  "Property": "WeekStart"
+                }
+              },
+              "queryRef": "fct_CashForecast.WeekStart",
+              "nativeQueryRef": "WeekStart"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Cumulative Cash Position"
+                }
+              },
+              "queryRef": "_Measures.Cumulative Cash Position",
+              "nativeQueryRef": "Cumulative Cash Position"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_CashForecast"
+                  }
+                },
+                "Property": "WeekStart"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Cumulative cash position by week. The low point matters more than the closing value'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

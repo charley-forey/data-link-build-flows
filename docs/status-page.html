@@ -260,9 +260,9 @@
     capacity now run on the same spine.
   </p>
   <div class="meta">
-    <span>Phase 2 live &mdash; 18 Aug 2026</span>
+    <span>Report published &mdash; 18 Aug 2026</span>
     <span>Workspace: BuildFlows / Data Link</span>
-    <span>Phase 2 of 2</span>
+    <span>Both phases complete</span>
   </div>
 </header>
 
@@ -309,7 +309,7 @@
     <div class="stat"><span class="n">0</span><span class="k">blocking failures</span></div>
     <div class="stat"><span class="n">203</span><span class="k">offline assertions</span></div>
     <div class="stat"><span class="n">68</span><span class="k">governed measures</span></div>
-    <div class="stat"><span class="n">11</span><span class="k">report pages specified</span></div>
+    <div class="stat"><span class="n">11</span><span class="k">report pages published</span></div>
   </div>
 
   <h3>The first WIP row, computed end to end</h3>
@@ -424,6 +424,47 @@
       and the gap between the two is the honest answer.
     </p>
   </div>
+</section>
+
+<section>
+  <div class="label">Published</div>
+  <h2>The report</h2>
+  <div class="prose">
+    <p>
+      Eleven pages, 110 visuals, live in your workspace and reading the model directly. It is
+      <strong>generated from code</strong> rather than placed by hand, which is why it can be
+      rebuilt exactly and reviewed as a diff.
+    </p>
+    <p>
+      That decision paid for itself immediately. The generator refuses to emit a visual bound to a
+      field the model does not have &mdash; a mistyped measure does not fail when you publish, it
+      renders an <em>empty</em> visual, which looks exactly like "no data matched the filter".
+    </p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Page</th><th>Answers</th></tr></thead>
+      <tbody>
+        <tr><td>Portfolio</td><td>Every project at once &mdash; contract, forecast cost, margin, risk</td></tr>
+        <tr><td>Executive KPI</td><td>The one-page position for the CEO</td></tr>
+        <tr><td>WIP Schedule</td><td>The Controller's deliverable, exportable to Excel</td></tr>
+        <tr><td>Project Performance</td><td>Drill-down to cost-code level, change orders, margin fade</td></tr>
+        <tr><td>Backlog &amp; Burn</td><td>Work in hand and the rate it is consumed</td></tr>
+        <tr><td>Exceptions</td><td>What needs attention, without digging through three systems</td></tr>
+        <tr><td>Pipeline &amp; Forecast</td><td>Open pipeline weighted by stage win probability</td></tr>
+        <tr><td>AR &amp; Collections</td><td>The chase list</td></tr>
+        <tr><td>Cash Forecast</td><td>Committed cash in and out, by week</td></tr>
+        <tr><td>Capacity</td><td>Hours, utilisation and what labour actually earns</td></tr>
+        <tr><td>Data Quality</td><td>Whether today's numbers can be trusted</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.9rem;color:var(--ink-2);margin-top:0.9rem;max-width:40rem">
+    Status never ships as colour alone. Red and green separate by only &Delta;E 7.1 under
+    deuteranopia &mdash; below the &Delta;E 8 floor &mdash; so every indicator carries a word
+    beside it. The report was rendered and read back to confirm it, not assumed.
+  </p>
 </section>
 
 <section>
@@ -590,10 +631,9 @@
       <p>Confirm the standard budget view and the live request quota against the real tenant.</p>
     </li>
     <li>
-      <strong>Publish the report</strong>
-      <p>Eleven pages: portfolio, executive KPIs, the WIP schedule, project performance, backlog
-      and burn, exceptions, data quality, pipeline and forecast, receivables, cash forecast and
-      capacity.</p>
+      <strong>Reconcile one historical month</strong>
+      <p>Rebuild a WIP schedule the Controller has already produced by hand and tie it out line by
+      line. This is the real acceptance test; everything before it is a precondition.</p>
     </li>
     <li>
       <strong>Load real deals into HubSpot</strong>

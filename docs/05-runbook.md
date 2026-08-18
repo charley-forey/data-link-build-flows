@@ -245,9 +245,37 @@ existing records — a change order going from pending to approved would never b
 picked up, and the contract value would be quietly wrong rather than obviously
 missing.
 
-**Changing a transform** — edit the `.sql`, run `python tests/test_gold.py`,
-re-upload to `Files/sql/`. The test runs the real files, so a broken join fails
-locally in seconds instead of at 3am in Spark.
+**Changing a transform** — edit the `.sql`, run `python scripts/run_tests.py`,
+then `python scripts/deploy_files.py --apply`. The tests run the real files, so
+a broken join fails locally in seconds instead of at 3am in Spark.
+
+**Deploying code to Fabric** — `python scripts/deploy_files.py --apply` uploads
+`platform/lib`, `transformation/sql`, `transformation/dq` and the ingestion
+configs to `Files/`. Dry-runs without `--apply`.
+
+The notebooks are thin: they import the library and run whatever SQL is in
+`Files/sql/`. **A notebook run after editing a `.sql` but before deploying it
+executes the previous version and succeeds**, which is the quiet way to spend an
+hour debugging a fix that was never uploaded. Deploy, then run.
+
+Note the configs are renamed on upload: each source keeps `endpoints.yml` or
+`entities.yml` in its own folder, but they all land in one flat `Files/config/`
+and would collide, so they become `procore_endpoints.yml`, `qbo_entities.yml`,
+`hubspot_objects.yml`. The notebooks read the prefixed names — uploading the
+bare name adds a file nobody reads and leaves the real config stale.
+
+**Changing the report** — edit `scripts/make_report.py`, never the PBIR JSON.
+Then `python scripts/make_report.py && python scripts/deploy_report.py --apply`.
+
+The generator validates every field against `powerbi/model-schema.json` and
+refuses to write a report that binds to something the model does not have. It
+also rejects a visual that sorts by a field it does not display, because Power
+BI ignores that sort silently and falls back to alphabetical — which is how an
+ageing chart ships reading `1-30, 31-60, 61-90, Current`.
+
+After adding a table or column to the semantic model, refresh
+`powerbi/model-schema.json` or the validator will reject a field that now
+exists.
 
 **Changing a notebook** — edit `scripts/make_notebooks.py`, never the `.ipynb`.
 A hand-edited notebook is overwritten by the next deploy and the change is lost

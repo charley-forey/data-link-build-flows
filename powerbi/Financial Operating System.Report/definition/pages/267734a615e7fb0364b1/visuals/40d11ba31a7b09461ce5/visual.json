@@ -1,0 +1,141 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "40d11ba31a7b09461ce5",
+  "position": {
+    "x": 16,
+    "y": 490,
+    "z": 1009,
+    "height": 186,
+    "width": 1248,
+    "tabOrder": 1009
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "Ledger"
+                }
+              },
+              "queryRef": "fct_Aging.Ledger",
+              "nativeQueryRef": "Ledger"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "CounterpartyName"
+                }
+              },
+              "queryRef": "fct_Aging.CounterpartyName",
+              "nativeQueryRef": "CounterpartyName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "DocNumber"
+                }
+              },
+              "queryRef": "fct_Aging.DocNumber",
+              "nativeQueryRef": "DocNumber"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "DueDate"
+                }
+              },
+              "queryRef": "fct_Aging.DueDate",
+              "nativeQueryRef": "DueDate"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "DaysPastDue"
+                }
+              },
+              "queryRef": "fct_Aging.DaysPastDue",
+              "nativeQueryRef": "DaysPastDue"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "OpenBalance"
+                }
+              },
+              "queryRef": "fct_Aging.OpenBalance",
+              "nativeQueryRef": "OpenBalance"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_Aging"
+                  }
+                },
+                "Property": "DaysPastDue"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Overdue exposure: documents already past due, carried into the current week because they are due now'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

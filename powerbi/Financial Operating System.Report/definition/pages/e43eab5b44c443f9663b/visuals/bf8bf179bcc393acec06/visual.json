@@ -1,0 +1,141 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "bf8bf179bcc393acec06",
+  "position": {
+    "x": 16,
+    "y": 490,
+    "z": 1009,
+    "height": 186,
+    "width": 1248,
+    "tabOrder": 1009
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_LabourHours"
+                    }
+                  },
+                  "Property": "WorkerName"
+                }
+              },
+              "queryRef": "fct_LabourHours.WorkerName",
+              "nativeQueryRef": "WorkerName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_LabourHours"
+                    }
+                  },
+                  "Property": "WorkerType"
+                }
+              },
+              "queryRef": "fct_LabourHours.WorkerType",
+              "nativeQueryRef": "WorkerType"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_LabourHours"
+                    }
+                  },
+                  "Property": "BillableStatus"
+                }
+              },
+              "queryRef": "fct_LabourHours.BillableStatus",
+              "nativeQueryRef": "BillableStatus"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_LabourHours"
+                    }
+                  },
+                  "Property": "Hours"
+                }
+              },
+              "queryRef": "fct_LabourHours.Hours",
+              "nativeQueryRef": "Hours"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_LabourHours"
+                    }
+                  },
+                  "Property": "LabourCost"
+                }
+              },
+              "queryRef": "fct_LabourHours.LabourCost",
+              "nativeQueryRef": "LabourCost"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_LabourHours"
+                    }
+                  },
+                  "Property": "BillableValue"
+                }
+              },
+              "queryRef": "fct_LabourHours.BillableValue",
+              "nativeQueryRef": "BillableValue"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_LabourHours"
+                  }
+                },
+                "Property": "Hours"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Unattributed hours: time that cannot be costed to a project'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

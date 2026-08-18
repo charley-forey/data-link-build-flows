@@ -1,0 +1,103 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "8c7275a4cf041fa610de",
+  "position": {
+    "x": 646,
+    "y": 242,
+    "z": 1008,
+    "height": 236,
+    "width": 618,
+    "tabOrder": 1008
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_CashForecast"
+                    }
+                  },
+                  "Property": "WeekStart"
+                }
+              },
+              "queryRef": "fct_CashForecast.WeekStart",
+              "nativeQueryRef": "WeekStart"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Expected Collections"
+                }
+              },
+              "queryRef": "_Measures.Expected Collections",
+              "nativeQueryRef": "Expected Collections"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Expected Payments"
+                }
+              },
+              "queryRef": "_Measures.Expected Payments",
+              "nativeQueryRef": "Expected Payments"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_CashForecast"
+                  }
+                },
+                "Property": "WeekStart"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Weekly collections and payments on one axis around zero'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

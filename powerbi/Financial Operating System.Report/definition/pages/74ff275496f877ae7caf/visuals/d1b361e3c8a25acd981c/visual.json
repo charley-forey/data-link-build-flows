@@ -1,0 +1,113 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "d1b361e3c8a25acd981c",
+  "position": {
+    "x": 16,
+    "y": 512,
+    "z": 1009,
+    "height": 260,
+    "width": 618,
+    "tabOrder": 1009
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_Project"
+                    }
+                  },
+                  "Property": "ProjectName"
+                }
+              },
+              "queryRef": "dim_Project.ProjectName",
+              "nativeQueryRef": "ProjectName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_BudgetLine"
+                    }
+                  },
+                  "Property": "CostCode"
+                }
+              },
+              "queryRef": "fct_BudgetLine.CostCode",
+              "nativeQueryRef": "CostCode"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_BudgetLine"
+                    }
+                  },
+                  "Property": "EstimatedCostAtCompletion"
+                }
+              },
+              "queryRef": "fct_BudgetLine.EstimatedCostAtCompletion",
+              "nativeQueryRef": "EstimatedCostAtCompletion"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_BudgetLine"
+                    }
+                  },
+                  "Property": "ProjectedOverUnder"
+                }
+              },
+              "queryRef": "fct_BudgetLine.ProjectedOverUnder",
+              "nativeQueryRef": "ProjectedOverUnder"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_BudgetLine"
+                  }
+                },
+                "Property": "ProjectedOverUnder"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Cost codes over their forecast, by project'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

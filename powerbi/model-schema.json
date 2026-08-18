@@ -1,0 +1,329 @@
+{
+ "dim_Date": {
+  "columns": [
+   "Date",
+   "Year",
+   "Month",
+   "Quarter",
+   "DayOfMonth",
+   "MonthStart",
+   "MonthEnd",
+   "MonthShortName",
+   "MonthName",
+   "MonthYear",
+   "MonthYearSort",
+   "QuarterYear",
+   "QuarterYearSort",
+   "MonthOffset",
+   "IsPast",
+   "IsCurrentMonth",
+   "IsCurrentYear"
+  ],
+  "measures": []
+ },
+ "dim_Project": {
+  "columns": [
+   "ProjectKey",
+   "ProcoreProjectId",
+   "QboCustomerId",
+   "HubspotDealId",
+   "ProjectNumber",
+   "ProjectName",
+   "ProjectStatus",
+   "ProjectStage",
+   "ProjectType",
+   "Office",
+   "Region",
+   "City",
+   "StateCode",
+   "IsActive",
+   "ProjectStart",
+   "ProjectFinish",
+   "QboJobName",
+   "CrosswalkMethod",
+   "CrosswalkConfidence",
+   "OriginalContract",
+   "ContractGrandTotal",
+   "RetainagePercent",
+   "ContractStart",
+   "ContractFinish",
+   "HasPrimeContract",
+   "HasExecutedContract",
+   "IsInProcore",
+   "IsInCrosswalk"
+  ],
+  "measures": []
+ },
+ "fct_WIP": {
+  "columns": [
+   "ProjectKey",
+   "MonthStart",
+   "OriginalContract",
+   "ApprovedChangeOrders",
+   "PendingChangeOrders",
+   "RevisedContract",
+   "OriginalBudget",
+   "RevisedBudget",
+   "CommittedCost",
+   "CostToDate",
+   "CostToDateQbo",
+   "EAC",
+   "BilledToDate",
+   "OverEacCostCodes",
+   "PercentCompleteRaw",
+   "PercentComplete",
+   "EarnedRevenue",
+   "CostToComplete",
+   "GrossProfitAtCompletion",
+   "GrossProfitPctAtCompletion",
+   "EarnedGrossProfit",
+   "OverBilling",
+   "UnderBilling",
+   "Backlog",
+   "CostVariance",
+   "CostVariancePct"
+  ],
+  "measures": []
+ },
+ "fct_BudgetLine": {
+  "columns": [
+   "ProjectKey",
+   "CostCodeKey",
+   "BudgetLineKey",
+   "CostCode",
+   "Category",
+   "OriginalBudget",
+   "ApprovedBudgetChanges",
+   "RevisedBudget",
+   "CommittedCost",
+   "DirectCost",
+   "JobToDateCost",
+   "EstimatedCostAtCompletion",
+   "ForecastToComplete",
+   "ProjectedOverUnder",
+   "IsOverEac"
+  ],
+  "measures": []
+ },
+ "fct_ChangeOrder": {
+  "columns": [
+   "ProjectKey",
+   "ChangeOrderKey",
+   "ContractId",
+   "ChangeOrderScope",
+   "ChangeOrderNumber",
+   "Title",
+   "Status",
+   "Amount",
+   "CreatedDate",
+   "ApprovedDate",
+   "EffectiveDate",
+   "MonthStart",
+   "HasOutOfRangeDate",
+   "IsApproved"
+  ],
+  "measures": []
+ },
+ "_Measures": {
+  "columns": [
+   "Anchor"
+  ],
+  "measures": [
+   "Original Contract",
+   "Approved Change Orders",
+   "Pending Change Orders",
+   "Revised Contract",
+   "Contract Growth %",
+   "Original Budget",
+   "Revised Budget",
+   "Committed Cost",
+   "Cost to Date",
+   "Estimated Cost at Completion",
+   "Cost to Complete",
+   "Percent Complete",
+   "Earned Revenue",
+   "Gross Profit at Completion",
+   "GP % at Completion",
+   "Earned Gross Profit",
+   "Earned GP %",
+   "Fade Gain",
+   "Billed to Date",
+   "Over Billing",
+   "Under Billing",
+   "Net Over Under Billing",
+   "Backlog Value",
+   "Backlog Months",
+   "Cost to Date (QuickBooks)",
+   "Cost Variance",
+   "Cost Variance %",
+   "Unmapped Contract Value",
+   "Cost Codes Over EAC",
+   "Project Risk Label",
+   "Last Successful Run",
+   "Hours Since Last Run",
+   "Pipeline Status",
+   "Blocking DQ Failures",
+   "DQ Warnings",
+   "Projects Unmapped",
+   "Projects at Risk",
+   "Projects Over EAC",
+   "Pipeline Value",
+   "Weighted Pipeline",
+   "Open Deals",
+   "Average Deal Size",
+   "Pipeline Confidence",
+   "Stale Deals",
+   "Stale Pipeline Value",
+   "Average Days Open",
+   "Total Forward Work",
+   "AR Outstanding",
+   "AR Overdue",
+   "AR Over 90 Days",
+   "AR Overdue %",
+   "AR Weighted Average Days",
+   "Days Sales Outstanding",
+   "Invoices Outstanding",
+   "AP Outstanding",
+   "AP Overdue",
+   "Net Working Capital",
+   "Expected Collections",
+   "Expected Payments",
+   "Net Cash Movement",
+   "Cumulative Cash Position",
+   "Cash Forecast Basis",
+   "Labour Hours",
+   "Labour Cost",
+   "Billable Hours",
+   "Utilisation",
+   "Labour Margin",
+   "Unattributed Hours"
+  ]
+ },
+ "meta_PipelineRun": {
+  "columns": [
+   "BatchId",
+   "RunAt",
+   "StepCount",
+   "RowsWritten",
+   "Succeeded"
+  ],
+  "measures": []
+ },
+ "meta_DataQuality": {
+  "columns": [
+   "Expectation",
+   "TableName",
+   "Severity",
+   "FailingRows",
+   "Passed",
+   "Description",
+   "CheckedAt",
+   "SeveritySort",
+   "StatusLabel"
+  ],
+  "measures": []
+ },
+ "meta_UnmappedProjects": {
+  "columns": [
+   "ProjectKey",
+   "ProjectNumber",
+   "ProjectName",
+   "ProjectStatus",
+   "OriginalContract",
+   "CrosswalkMethod",
+   "CrosswalkConfidence",
+   "ProposedQboCustomerId",
+   "ProposedQboJobName",
+   "Reason"
+  ],
+  "measures": []
+ },
+ "dim_DealStage": {
+  "columns": [
+   "DealStageKey",
+   "StageName",
+   "PipelineName",
+   "DisplayOrder",
+   "WinProbability",
+   "IsClosedStage",
+   "StageOutcome"
+  ],
+  "measures": []
+ },
+ "dim_Owner": {
+  "columns": [
+   "OwnerKey",
+   "OwnerName",
+   "OwnerEmail"
+  ],
+  "measures": []
+ },
+ "fct_Pipeline": {
+  "columns": [
+   "DealKey",
+   "DealStageKey",
+   "OwnerKey",
+   "DealName",
+   "DealType",
+   "Amount",
+   "WinProbability",
+   "WeightedAmount",
+   "CloseDate",
+   "CreateDate",
+   "MonthStart",
+   "HasOutOfRangeDate",
+   "DaysOpen",
+   "IsPastCloseDate"
+  ],
+  "measures": []
+ },
+ "fct_Aging": {
+  "columns": [
+   "Ledger",
+   "AgingKey",
+   "DocumentId",
+   "DocNumber",
+   "CounterpartyId",
+   "CounterpartyName",
+   "ProjectKey",
+   "DocumentDate",
+   "DueDate",
+   "TotalAmount",
+   "OpenBalance",
+   "DaysPastDue",
+   "AgingBucket",
+   "AgingBucketSort",
+   "IsOverdue",
+   "MonthStart"
+  ],
+  "measures": []
+ },
+ "fct_CashForecast": {
+  "columns": [
+   "WeekStart",
+   "Flow",
+   "Amount",
+   "OverdueAmount",
+   "DocumentCount",
+   "IsPast"
+  ],
+  "measures": []
+ },
+ "fct_LabourHours": {
+  "columns": [
+   "LabourKey",
+   "ProjectKey",
+   "WorkerKey",
+   "WorkerName",
+   "WorkerType",
+   "BillableStatus",
+   "ActivityDate",
+   "MonthStart",
+   "Hours",
+   "LabourCost",
+   "BillableValue",
+   "IsBillable"
+  ],
+  "measures": []
+ }
+}

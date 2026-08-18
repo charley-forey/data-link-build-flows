@@ -1,0 +1,141 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "28be8091c28dbe7432d9",
+  "position": {
+    "x": 522,
+    "y": 242,
+    "z": 1008,
+    "height": 236,
+    "width": 742,
+    "tabOrder": 1008
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "CounterpartyName"
+                }
+              },
+              "queryRef": "fct_Aging.CounterpartyName",
+              "nativeQueryRef": "CounterpartyName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "DocNumber"
+                }
+              },
+              "queryRef": "fct_Aging.DocNumber",
+              "nativeQueryRef": "DocNumber"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "DueDate"
+                }
+              },
+              "queryRef": "fct_Aging.DueDate",
+              "nativeQueryRef": "DueDate"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "DaysPastDue"
+                }
+              },
+              "queryRef": "fct_Aging.DaysPastDue",
+              "nativeQueryRef": "DaysPastDue"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "OpenBalance"
+                }
+              },
+              "queryRef": "fct_Aging.OpenBalance",
+              "nativeQueryRef": "OpenBalance"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Aging"
+                    }
+                  },
+                  "Property": "AgingBucket"
+                }
+              },
+              "queryRef": "fct_Aging.AgingBucket",
+              "nativeQueryRef": "AgingBucket"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_Aging"
+                  }
+                },
+                "Property": "DaysPastDue"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Open invoices with customer, due date, days past due and balance. This is a worklist, not a picture'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

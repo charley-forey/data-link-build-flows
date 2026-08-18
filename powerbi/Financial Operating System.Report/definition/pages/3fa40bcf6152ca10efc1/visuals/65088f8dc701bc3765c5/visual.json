@@ -1,0 +1,127 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "65088f8dc701bc3765c5",
+  "position": {
+    "x": 646,
+    "y": 490,
+    "z": 1010,
+    "height": 190,
+    "width": 618,
+    "tabOrder": 1010
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Pipeline"
+                    }
+                  },
+                  "Property": "DealName"
+                }
+              },
+              "queryRef": "fct_Pipeline.DealName",
+              "nativeQueryRef": "DealName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_DealStage"
+                    }
+                  },
+                  "Property": "StageName"
+                }
+              },
+              "queryRef": "dim_DealStage.StageName",
+              "nativeQueryRef": "StageName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Pipeline"
+                    }
+                  },
+                  "Property": "Amount"
+                }
+              },
+              "queryRef": "fct_Pipeline.Amount",
+              "nativeQueryRef": "Amount"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Pipeline"
+                    }
+                  },
+                  "Property": "CloseDate"
+                }
+              },
+              "queryRef": "fct_Pipeline.CloseDate",
+              "nativeQueryRef": "CloseDate"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_Pipeline"
+                    }
+                  },
+                  "Property": "DaysOpen"
+                }
+              },
+              "queryRef": "fct_Pipeline.DaysOpen",
+              "nativeQueryRef": "DaysOpen"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_Pipeline"
+                  }
+                },
+                "Property": "CloseDate"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Stale deals: open deals whose close date has already passed, which inflate the forecast by sitting in a month that has gone'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
