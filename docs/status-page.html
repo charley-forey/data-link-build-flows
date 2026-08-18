@@ -256,12 +256,13 @@
   <h1>Financial Operating System</h1>
   <p class="standfirst">
     Procore, QuickBooks and HubSpot feeding one governed source of truth — replacing the
-    WIP schedule the Controller assembles by hand each month.
+    WIP schedule the Controller assembles by hand each month. Pipeline, cash, receivables and
+    capacity now run on the same spine.
   </p>
   <div class="meta">
-    <span>All three sources connected &mdash; 18 Aug 2026</span>
+    <span>Phase 2 live &mdash; 18 Aug 2026</span>
     <span>Workspace: BuildFlows / Data Link</span>
-    <span>Phase 1 of 2</span>
+    <span>Phase 2 of 2</span>
   </div>
 </header>
 
@@ -279,14 +280,16 @@
     <div class="source">
       <h3>HubSpot</h3>
       <span class="chip ok"><span class="dot"></span>Connected</span>
-      <p>Authenticating on the service token. One deal pipeline with 7 stages; no deals in
-      the portal yet. Pipeline reporting is phase 2.</p>
+      <p>Authenticating on the service token. One deal pipeline with 7 stages, all modelled
+      with their win probabilities. No deals in the portal yet, so the pipeline reads zero &mdash;
+      the forecast is wired and waiting for deals, not missing.</p>
     </div>
     <div class="source">
       <h3>QuickBooks Online</h3>
       <span class="chip ok"><span class="dot"></span>Pulling data</span>
-      <p>Authorised. 292 rows across 17 entities and 4 reports — the chart of accounts,
-      customers and jobs, bills, purchases and the general ledger.</p>
+      <p>Authorised. The chart of accounts, customers and jobs, bills, purchases and the
+      general ledger &mdash; now also open receivables and payables, and time activities for
+      capacity.</p>
     </div>
   </div>
 </section>
@@ -302,11 +305,11 @@
     </p>
   </div>
   <div class="stats">
-    <div class="stat"><span class="n">666</span><span class="k">rows of live source data</span></div>
-    <div class="stat"><span class="n">34</span><span class="k">quality checks run</span></div>
+    <div class="stat"><span class="n">53</span><span class="k">quality checks run</span></div>
     <div class="stat"><span class="n">0</span><span class="k">blocking failures</span></div>
-    <div class="stat"><span class="n">138</span><span class="k">offline assertions</span></div>
-    <div class="stat"><span class="n">38</span><span class="k">governed measures</span></div>
+    <div class="stat"><span class="n">203</span><span class="k">offline assertions</span></div>
+    <div class="stat"><span class="n">68</span><span class="k">governed measures</span></div>
+    <div class="stat"><span class="n">11</span><span class="k">report pages specified</span></div>
   </div>
 
   <h3>The first WIP row, computed end to end</h3>
@@ -380,6 +383,50 @@
 </section>
 
 <section>
+  <div class="label">Phase 2 &middot; live</div>
+  <h2>Cash, receivables, pipeline and capacity</h2>
+  <div class="prose">
+    <p>
+      The four remaining reporting areas now run on the same spine as the WIP schedule, against
+      live QuickBooks and HubSpot data. Every figure below was read back out of the finished
+      reporting layer, not the source systems.
+    </p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Measure</th><th>Value</th><th>What it is</th></tr></thead>
+      <tbody>
+        <tr><td>Receivables outstanding</td><td class="num">5,281.52</td><td>20 open invoices</td></tr>
+        <tr><td>Of which overdue</td><td class="num">1,525.50</td><td>10 invoices, 28.9% of the book</td></tr>
+        <tr><td>Payables outstanding</td><td class="num">1,602.67</td><td>5 open bills, 4 already overdue</td></tr>
+        <tr><td><strong>Net working capital</strong></td><td class="num"><strong>3,678.85</strong></td><td>Receivables less payables</td></tr>
+        <tr><td>Weighted pipeline</td><td class="num">0</td><td>Correctly zero &mdash; no deals in the portal</td></tr>
+        <tr><td>Utilisation</td><td class="num">53.3%</td><td>10 billable hours of 18.75 paid</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.9rem;color:var(--ink-2);margin-top:0.9rem;max-width:40rem">
+    Sandbox figures again &mdash; the value is that each one is derived and each identity holds.
+  </p>
+
+  <h3>What the cash forecast deliberately does not do</h3>
+  <div class="prose">
+    <p>
+      It shows <strong>committed</strong> cash only: invoices already raised and bills already
+      received, placed in the week they fall due. Anything already overdue is pulled into the
+      current week rather than buried in a past one, because it is real money that has not arrived.
+    </p>
+    <p>
+      It does <em>not</em> forecast cash from work in backlog. Turning backlog into expected cash
+      needs a billing schedule and collection assumptions nobody has given us yet. Inventing them
+      would put a confident line on a chart with nothing behind it. Backlog is reported separately,
+      and the gap between the two is the honest answer.
+    </p>
+  </div>
+</section>
+
+<section>
   <div class="label">The hard part</div>
   <h2>Linking three systems with no shared key</h2>
   <div class="prose">
@@ -404,11 +451,11 @@
 
 <section>
   <div class="label">Findings</div>
-  <h2>Four defects the live data exposed</h2>
+  <h2>Five defects the live data exposed</h2>
   <div class="prose">
     <p>
-      Connecting to the real APIs found five bugs that no amount of offline testing would have
-      caught. The first is the one worth understanding.
+      Connecting to the real APIs found six bugs that no amount of offline testing would have
+      caught. The first and last are the ones worth understanding.
     </p>
   </div>
 
@@ -450,6 +497,19 @@
       built one step too early, so it always showed the <em>last</em> run's results — reporting
       zero warnings for a run that had just recorded one. Found by querying the live report rather
       than trusting the pipeline's green tick. It now rebuilds after the checks complete.
+    </p>
+  </div>
+  <div class="find">
+    <span class="sev">SILENT &mdash; UNDERSTATED UTILISATION</span>
+    <h3>Hours already billed did not count as billable</h3>
+    <p>
+      QuickBooks records a time entry as one of three things: billable, not billable, or
+      <em>already billed</em>. The test for &ldquo;billable&rdquo; matched the first and silently
+      missed the third &mdash; hours that have actually been invoiced to a client, which is the most
+      billable state there is. Utilisation read 26.7% against a true 53.3%: exactly the number a
+      capacity decision would be made on. Caught by reading the finished measure back and asking why
+      labour cost was zero. Now matched against the real three-value list, with a test covering the
+      case the original fixture never contained.
     </p>
   </div>
   <div class="find">
@@ -521,10 +581,6 @@
   <h2>From here</h2>
   <ol class="steps">
     <li>
-      <strong>Authorise QuickBooks</strong>
-      <p>One browser approval. Unblocks the accounting half of every number.</p>
-    </li>
-    <li>
       <strong>Reconcile one historical month</strong>
       <p>Rebuild a WIP schedule the Controller has already produced by hand and tie it out line by
       line. This is the real acceptance test; everything before it is a precondition.</p>
@@ -535,12 +591,14 @@
     </li>
     <li>
       <strong>Publish the report</strong>
-      <p>Seven pages: portfolio, executive KPIs, the WIP schedule, project performance, backlog and
-      burn, exceptions, and data quality.</p>
+      <p>Eleven pages: portfolio, executive KPIs, the WIP schedule, project performance, backlog
+      and burn, exceptions, data quality, pipeline and forecast, receivables, cash forecast and
+      capacity.</p>
     </li>
     <li>
-      <strong>Phase 2</strong>
-      <p>HubSpot pipeline and weighted forecast, cash forecast, AR and collections, capacity planning.</p>
+      <strong>Load real deals into HubSpot</strong>
+      <p>The pipeline forecast is built and returns zero because the portal is empty. It starts
+      reporting the moment there are deals to report.</p>
     </li>
   </ol>
 </section>
