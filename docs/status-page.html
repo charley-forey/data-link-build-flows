@@ -1,0 +1,527 @@
+<title>Data Link Financial Operating System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    color-scheme: light;
+    --ground:      #f5f6f8;
+    --surface:     #ffffff;
+    --surface-alt: #eceef2;
+    --line:        #d3d8e0;
+    --line-soft:   #e3e7ed;
+    --ink:         #12161d;
+    --ink-2:       #4a5261;
+    --ink-3:       #6f7889;
+    --accent:      #2f5d8c;
+    --accent-soft: #e6edf5;
+    --good:        #1a7f45;
+    --good-soft:   #e2f2e8;
+    --warn:        #9a6100;
+    --warn-soft:   #f8eeda;
+    --stop:        #b3372c;
+    --stop-soft:   #fbe8e5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground:      #0e1116;
+      --surface:     #161a21;
+      --surface-alt: #1d222b;
+      --line:        #2c333f;
+      --line-soft:   #232933;
+      --ink:         #eef1f6;
+      --ink-2:       #b3bcca;
+      --ink-3:       #838d9e;
+      --accent:      #7fb0e0;
+      --accent-soft: #1b2a3a;
+      --good:        #5dc98a;
+      --good-soft:   #14291d;
+      --warn:        #e0a53a;
+      --warn-soft:   #2c2413;
+      --stop:        #ef8377;
+      --stop-soft:   #2e1917;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground:      #0e1116;
+    --surface:     #161a21;
+    --surface-alt: #1d222b;
+    --line:        #2c333f;
+    --line-soft:   #232933;
+    --ink:         #eef1f6;
+    --ink-2:       #b3bcca;
+    --ink-3:       #838d9e;
+    --accent:      #7fb0e0;
+    --accent-soft: #1b2a3a;
+    --good:        #5dc98a;
+    --good-soft:   #14291d;
+    --warn:        #e0a53a;
+    --warn-soft:   #2c2413;
+    --stop:        #ef8377;
+    --stop-soft:   #2e1917;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 1.5rem 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .prose { max-width: 40rem; }
+
+  h1, h2, h3, .label, .chip, th, .mono {
+    font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* ---------- masthead ---------- */
+  header { padding: 4.5rem 0 2.5rem; border-bottom: 2px solid var(--ink); }
+  h1 {
+    font-size: clamp(2.1rem, 5.5vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.022em;
+    margin: 0.9rem 0 0;
+    text-wrap: balance;
+  }
+  .standfirst {
+    font-size: 1.2rem;
+    color: var(--ink-2);
+    margin: 1.1rem 0 0;
+    max-width: 36rem;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 0.6rem 1.6rem;
+    margin-top: 1.8rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--ink-3);
+  }
+
+  /* ---------- sections ---------- */
+  section { padding-top: 3.5rem; }
+  h2 {
+    font-size: 1.55rem; font-weight: 600; letter-spacing: -0.015em;
+    margin: 0.5rem 0 1.1rem; text-wrap: balance;
+  }
+  h3 {
+    font-size: 1.02rem; font-weight: 600; letter-spacing: -0.005em;
+    margin: 2rem 0 0.5rem;
+  }
+  p { margin: 0 0 1.05rem; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px;
+  }
+
+  /* ---------- source status ---------- */
+  .sources {
+    display: grid; gap: 1px; margin-top: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    background: var(--line); border: 1px solid var(--line);
+  }
+  .source { background: var(--surface); padding: 1.3rem 1.4rem; }
+  .source h3 { margin: 0 0 0.15rem; font-size: 1.12rem; }
+  .source p { margin: 0.5rem 0 0; font-size: 0.93rem; color: var(--ink-2); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.07em;
+    text-transform: uppercase; padding: 0.22rem 0.55rem; border-radius: 3px;
+    border: 1px solid currentColor;
+  }
+  .chip.ok   { color: var(--good); background: var(--good-soft); }
+  .chip.wait { color: var(--warn); background: var(--warn-soft); }
+  .chip .dot { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: currentColor; }
+
+  /* ---------- figures ---------- */
+  .stats {
+    display: grid; gap: 1px; margin: 1.6rem 0 0;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    background: var(--line); border: 1px solid var(--line);
+  }
+  .stat { background: var(--surface); padding: 1.05rem 1.1rem; }
+  .stat .n {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 1.75rem; font-weight: 500; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums; display: block; line-height: 1.15;
+  }
+  .stat .k { font-size: 0.79rem; color: var(--ink-3); margin-top: 0.2rem; display: block; }
+
+  /* ---------- pipeline diagram ---------- */
+  .flow {
+    margin: 1.6rem 0 0; padding: 1.5rem 1.3rem;
+    border: 1px solid var(--line); background: var(--surface);
+    overflow-x: auto;
+  }
+  .flow-row { display: flex; align-items: stretch; gap: 0.6rem; min-width: 44rem; }
+  .node {
+    flex: 1; padding: 0.8rem 0.85rem; border: 1px solid var(--line);
+    background: var(--surface-alt); border-radius: 3px;
+  }
+  .node .t {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.76rem; font-weight: 600; color: var(--accent);
+  }
+  .node .d { font-size: 0.83rem; color: var(--ink-2); margin-top: 0.3rem; line-height: 1.45; }
+  .node.gate { background: var(--warn-soft); border-color: var(--warn); }
+  .node.gate .t { color: var(--warn); }
+  .arrow {
+    align-self: center; color: var(--ink-3); font-family: "IBM Plex Mono", monospace;
+    font-size: 1.1rem; flex: 0 0 auto;
+  }
+
+  /* ---------- tables ---------- */
+  .tw { overflow-x: auto; margin: 1.3rem 0 0; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; min-width: 34rem; background: var(--surface); }
+  th {
+    text-align: left; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-3); padding: 0.7rem 0.9rem;
+    background: var(--surface-alt); border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  td { padding: 0.68rem 0.9rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.86em; background: var(--surface-alt);
+    padding: 0.1rem 0.34rem; border-radius: 3px;
+  }
+  td code { background: none; padding: 0; }
+
+  /* ---------- findings ---------- */
+  .find {
+    border: 1px solid var(--line); border-left: 3px solid var(--stop);
+    background: var(--surface); padding: 1.15rem 1.25rem; margin-top: 1rem;
+  }
+  .find h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+  .find p { margin: 0; font-size: 0.93rem; color: var(--ink-2); }
+  .find .sev {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.7rem;
+    color: var(--stop); letter-spacing: 0.05em; display: block; margin-bottom: 0.3rem;
+  }
+
+  .callout {
+    border: 1px solid var(--warn); background: var(--warn-soft);
+    padding: 1.15rem 1.25rem; margin-top: 1.4rem;
+  }
+  .callout p { margin: 0; font-size: 0.95rem; }
+  .callout p + p { margin-top: 0.7rem; }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 1.3rem 0 0; }
+  ol.steps li {
+    counter-increment: s; position: relative; padding: 0 0 1.1rem 2.6rem;
+    border-left: 1px solid var(--line); margin-left: 0.75rem;
+  }
+  ol.steps li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: -0.78rem; top: 0;
+    width: 1.55rem; height: 1.55rem; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-family: Archivo, sans-serif; font-size: 0.78rem; font-weight: 600;
+    display: grid; place-items: center;
+  }
+  ol.steps strong { font-family: Archivo, sans-serif; font-size: 0.98rem; }
+  ol.steps p { margin: 0.25rem 0 0; font-size: 0.93rem; color: var(--ink-2); }
+
+  footer {
+    margin-top: 4.5rem; padding-top: 1.4rem; border-top: 1px solid var(--line);
+    font-size: 0.82rem; color: var(--ink-3);
+  }
+  @media (max-width: 34rem) { body { font-size: 16px; padding: 0 1.1rem 4rem; } }
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="label">Data Link Technology Services &middot; Microsoft Fabric</div>
+  <h1>Financial Operating System</h1>
+  <p class="standfirst">
+    Procore, QuickBooks and HubSpot feeding one governed source of truth — replacing the
+    WIP schedule the Controller assembles by hand each month.
+  </p>
+  <div class="meta">
+    <span>Build status &mdash; 18 Aug 2026</span>
+    <span>Workspace: BuildFlows / Data Link</span>
+    <span>Phase 1 of 2</span>
+  </div>
+</header>
+
+<section>
+  <div class="label">Source connectivity</div>
+  <h2>Where each system stands</h2>
+  <div class="sources">
+    <div class="source">
+      <h3>Procore</h3>
+      <span class="chip ok"><span class="dot"></span>Pulling data</span>
+      <p>374 rows across 24 endpoints, landed into Fabric and carried all the way through
+      to a finished WIP row. Includes the budget-view detail rows that hold Estimated Cost
+      at Completion.</p>
+    </div>
+    <div class="source">
+      <h3>HubSpot</h3>
+      <span class="chip ok"><span class="dot"></span>Connected</span>
+      <p>Authenticating on the service token. One deal pipeline with 7 stages; no deals in
+      the portal yet. Pipeline reporting is phase 2.</p>
+    </div>
+    <div class="source">
+      <h3>QuickBooks Online</h3>
+      <span class="chip wait"><span class="dot"></span>Needs consent</span>
+      <p>Client ID and secret are in place. Intuit requires one interactive browser approval
+      to issue a refresh token — a person has to click it once.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="label">Verified</div>
+  <h2>What is running today</h2>
+  <div class="prose">
+    <p>
+      Live Procore data has travelled the whole path — API, raw store, validation, star schema,
+      quality gate, semantic model — and come out the other side as a work-in-progress row whose
+      arithmetic checks out. The reporting layer answers queries against it now.
+    </p>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="n">374</span><span class="k">rows of live Procore data</span></div>
+    <div class="stat"><span class="n">34</span><span class="k">quality checks run</span></div>
+    <div class="stat"><span class="n">0</span><span class="k">blocking failures</span></div>
+    <div class="stat"><span class="n">138</span><span class="k">offline assertions</span></div>
+    <div class="stat"><span class="n">38</span><span class="k">governed measures</span></div>
+  </div>
+
+  <h3>The first WIP row, computed end to end</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Measure</th><th>Value</th><th>Where it comes from</th></tr></thead>
+      <tbody>
+        <tr><td>Revised contract</td><td class="num">1,099,999</td><td>Prime contract plus approved change orders</td></tr>
+        <tr><td>Revised budget</td><td class="num">1,099,900</td><td>Two budget lines: 100,000 + 999,900</td></tr>
+        <tr><td>Committed cost</td><td class="num">10,000</td><td>Purchase orders and subcontracts</td></tr>
+        <tr><td>Estimated cost at completion</td><td class="num">1,099,900</td><td>Procore budget view</td></tr>
+        <tr><td>Cost to date</td><td class="num">0</td><td>Genuinely nil — nothing booked in the sandbox yet</td></tr>
+        <tr><td><strong>Gross profit at completion</strong></td><td class="num"><strong>99</strong></td><td>Contract less forecast cost</td></tr>
+        <tr><td>Backlog</td><td class="num">1,099,999</td><td>Contract not yet earned</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.9rem;color:var(--ink-2);margin-top:0.9rem;max-width:40rem">
+    Small numbers, because this is a sandbox. The point is that every one of them is derived,
+    not entered, and each identity holds.
+  </p>
+
+  <div class="flow" role="img" aria-label="Pipeline: three source APIs feed bronze raw payloads, then silver typed and validated data, then a gold star schema, through a data-quality gate, into the semantic model and Power BI report.">
+    <div class="flow-row">
+      <div class="node">
+        <div class="t">SOURCES</div>
+        <div class="d">Procore · QuickBooks · HubSpot. One config-driven extractor each.</div>
+      </div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="node">
+        <div class="t">BRONZE</div>
+        <div class="d">Raw payload, unparsed. A transform bug is a re-run, not a re-extract.</div>
+      </div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="node">
+        <div class="t">SILVER</div>
+        <div class="d">Typed, trimmed, validated. Rejects logged with a reason, never dropped.</div>
+      </div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="node">
+        <div class="t">GOLD</div>
+        <div class="d">Star schema. WIP, budget lines, change orders, cost, billing.</div>
+      </div>
+      <div class="arrow" aria-hidden="true">&rarr;</div>
+      <div class="node gate">
+        <div class="t">QUALITY GATE</div>
+        <div class="d">A blocking failure stops the run before anything publishes.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="label">The hard part</div>
+  <h2>Linking three systems with no shared key</h2>
+  <div class="prose">
+    <p>
+      Nothing ties a Procore project to a QuickBooks job to a HubSpot deal. Everything downstream
+      depends on getting that right, which is why the link is <em>curated</em>, not guessed. Matches
+      resolve in strict order: a manual entry from the Controller always wins, then an exact project
+      number, then a name match — but only when it is unambiguous.
+    </p>
+    <p>
+      If a project resembles two QuickBooks jobs equally well, the system does not pick one. That
+      would be a coin flip dressed up as a decision, and it would silently attribute one job's cost
+      to another job's revenue. It goes to a review page instead.
+    </p>
+    <p>
+      Projects that are missing a mapping still flow through, flagged. A gap makes a number
+      <strong>visibly incomplete</strong> rather than quietly smaller — which is the difference
+      between a report you can trust and one you cannot.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="label">Findings</div>
+  <h2>Four defects the live data exposed</h2>
+  <div class="prose">
+    <p>
+      Connecting to the real APIs found five bugs that no amount of offline testing would have
+      caught. The first is the one worth understanding.
+    </p>
+  </div>
+
+  <div class="find">
+    <span class="sev">SILENT &mdash; WOULD HAVE PRODUCED WRONG NUMBERS</span>
+    <h3>Budget columns named with spaces</h3>
+    <p>
+      Procore returns the money columns as <code>Job to Date Costs</code>, <code>Revised Budget</code>,
+      <code>Estimated Cost at Completion</code> — with spaces. The standard way of reading those
+      fields cannot parse a name with spaces; it returns nothing, which becomes zero. The result is a
+      WIP schedule where every project shows zero cost, therefore 0% complete and 100% margin. It
+      satisfies every accounting check and is completely wrong. Now read correctly, and pinned by a
+      test against a real captured record so it cannot regress.
+    </p>
+  </div>
+  <div class="find">
+    <span class="sev">WOULD HAVE LOST DATA</span>
+    <h3>One project could take down an entire feed</h3>
+    <p>
+      Procore answers with an error for any project that does not have a given tool enabled — which is
+      normal, since not every job uses Financials. That error was aborting the whole feed, losing the
+      projects that <em>did</em> have data. Now counted and skipped.
+    </p>
+  </div>
+  <div class="find">
+    <span class="sev">CONFIGURATION</span>
+    <h3>Two connection details were wrong</h3>
+    <p>
+      The Procore URL was a browser address rather than an API address, so every request was
+      malformed; the code now reduces whatever is entered to a valid endpoint. The vendor feed also
+      pointed at a path that does not exist.
+    </p>
+  </div>
+  <div class="find">
+    <span class="sev">WOULD HAVE MISREPORTED ITSELF</span>
+    <h3>The quality page reported the previous run</h3>
+    <p>
+      The report is meant to state its own trustworthiness. But the table feeding that page was
+      built one step too early, so it always showed the <em>last</em> run's results — reporting
+      zero warnings for a run that had just recorded one. Found by querying the live report rather
+      than trusting the pipeline's green tick. It now rebuilds after the checks complete.
+    </p>
+  </div>
+  <div class="find">
+    <span class="sev">CAPACITY</span>
+    <h3>The rate limit is 24× tighter than documented</h3>
+    <p>
+      Published guidance says 600 requests per hour. This tenant actually reports 25 per ten-second
+      window. Code tuned for one behaves badly on the other, so the connector now reads the limit
+      from each response rather than trusting a constant.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="label">Needs you</div>
+  <h2>What is blocking</h2>
+  <div class="callout">
+    <p>
+      <strong>QuickBooks authorisation.</strong> Intuit's security model requires a human to approve
+      access in a browser once. It cannot be automated. Running
+      <code>python scripts/qbo_authorize.py</code> opens the consent screen and stores the result;
+      after that the connection renews itself.
+    </p>
+    <p>
+      One caveat worth knowing: QuickBooks issues a <em>new</em> credential every time the old one is
+      used, and it expires permanently after 100 days of disuse. The platform stores each new one
+      automatically and warns at 60 days, because the failure mode is an integration that works fine
+      and then stops without notice.
+    </p>
+  </div>
+
+  <h3>Also worth confirming</h3>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr><th>Question</th><th>Why it matters</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Which budget view is the standard?</td>
+          <td>Procore returns different columns per view. Currently pinned to
+              <code>Procore Standard Budget</code> from the sandbox.</td>
+        </tr>
+        <tr>
+          <td>How is job cost dimensioned in QuickBooks?</td>
+          <td>Customer:Job, Class, or native Projects — decides the join to Procore.</td>
+        </tr>
+        <tr>
+          <td>Retainage: gross or net?</td>
+          <td>Whether billings on the WIP schedule are shown before or after retention.</td>
+        </tr>
+        <tr>
+          <td>Variance thresholds</td>
+          <td>How far Procore and QuickBooks may disagree on a project before someone looks.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="label">Sequence</div>
+  <h2>From here</h2>
+  <ol class="steps">
+    <li>
+      <strong>Authorise QuickBooks</strong>
+      <p>One browser approval. Unblocks the accounting half of every number.</p>
+    </li>
+    <li>
+      <strong>Reconcile one historical month</strong>
+      <p>Rebuild a WIP schedule the Controller has already produced by hand and tie it out line by
+      line. This is the real acceptance test; everything before it is a precondition.</p>
+    </li>
+    <li>
+      <strong>Point at production Procore</strong>
+      <p>Confirm the standard budget view and the live request quota against the real tenant.</p>
+    </li>
+    <li>
+      <strong>Publish the report</strong>
+      <p>Seven pages: portfolio, executive KPIs, the WIP schedule, project performance, backlog and
+      burn, exceptions, and data quality.</p>
+    </li>
+    <li>
+      <strong>Phase 2</strong>
+      <p>HubSpot pipeline and weighted forecast, cash forecast, AR and collections, capacity planning.</p>
+    </li>
+  </ol>
+</section>
+
+<footer>
+  Build verified 18 August 2026 · Fabric workspace BuildFlows, folder Data&nbsp;Link ·
+  Source: <span class="mono">github.com/charley-forey/data-link-build-flows</span>
+</footer>
+
+</div>
