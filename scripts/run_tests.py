@@ -19,6 +19,7 @@ CHECKS = [
     ("gold SQL + data-quality suite", ROOT / "tests" / "test_gold.py"),
     ("library unit tests", ROOT / "tests" / "test_lib.py"),
     ("Procore budget column keys", ROOT / "tests" / "test_silver_keys.py"),
+    ("phase 2 gold SQL", ROOT / "tests" / "test_phase2.py"),
     ("notebook generation", ROOT / "scripts" / "make_notebooks.py"),
 ]
 

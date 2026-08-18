@@ -1,0 +1,166 @@
+// Data Link Financial Operating System - phase 2 measures
+//
+// Pipeline & forecast, AR/collections, cash forecast, capacity.
+// Same two rules as measures.dax: everything numeric stays numeric, and nothing
+// anchors to TODAY() where a reporting date will do.
+
+// ============================================================ 08 Pipeline & Forecast
+
+/// Total open pipeline, unweighted. The headline number, and the one that
+/// flatters - it assumes every deal closes.
+Pipeline Value = SUM ( fct_Pipeline[Amount] )
+    formatString: "$#,0"
+
+/// Pipeline weighted by win probability. The number to plan against.
+/// The probability comes from the STAGE, not the deal, except where the portal
+/// has set a deal-level override - see fct_Pipeline.
+Weighted Pipeline = SUM ( fct_Pipeline[WeightedAmount] )
+    formatString: "$#,0"
+
+Open Deals = COALESCE ( COUNTROWS ( fct_Pipeline ), 0 )
+    formatString: "#,0"
+
+Average Deal Size = DIVIDE ( [Pipeline Value], [Open Deals] )
+    formatString: "$#,0"
+
+/// Weighted pipeline as a share of the unweighted total. A low ratio means the
+/// pipeline is full of early-stage work, which is a very different position
+/// from the same headline number sitting at contract-sent.
+Pipeline Confidence = DIVIDE ( [Weighted Pipeline], [Pipeline Value] )
+    formatString: "0.0%"
+
+/// Deals whose close date has already passed but are still open. These quietly
+/// inflate a forecast: the value sits in a month that has been and gone.
+Stale Deals = COALESCE ( CALCULATE ( COUNTROWS ( fct_Pipeline ), fct_Pipeline[IsPastCloseDate] = TRUE ), 0 )
+    formatString: "#,0"
+
+Stale Pipeline Value =
+    COALESCE ( CALCULATE ( [Pipeline Value], fct_Pipeline[IsPastCloseDate] = TRUE ), 0 )
+    formatString: "$#,0"
+
+Average Days Open = AVERAGE ( fct_Pipeline[DaysOpen] )
+    formatString: "0"
+
+/// Backlog plus weighted pipeline - work in hand plus work we might win.
+/// The two are NOT the same quality of number and are shown separately as well;
+/// this is the planning horizon, not a revenue forecast.
+Total Forward Work = [Backlog Value] + [Weighted Pipeline]
+    formatString: "$#,0"
+
+// ============================================================ 09 Receivables
+
+AR Outstanding = CALCULATE ( SUM ( fct_Aging[OpenBalance] ), fct_Aging[Ledger] = "AR" )
+    formatString: "$#,0"
+
+AR Overdue =
+    CALCULATE ( SUM ( fct_Aging[OpenBalance] ), fct_Aging[Ledger] = "AR", fct_Aging[IsOverdue] = TRUE )
+    formatString: "$#,0"
+
+AR Over 90 Days =
+    CALCULATE ( SUM ( fct_Aging[OpenBalance] ), fct_Aging[Ledger] = "AR", fct_Aging[AgingBucket] = "90+" )
+    formatString: "$#,0"
+
+AR Overdue % = DIVIDE ( [AR Overdue], [AR Outstanding] )
+    formatString: "0.0%"
+
+/// Weighted average age of the receivables book, in days. Weighted by value,
+/// because one large old invoice matters more than several small fresh ones -
+/// a plain average of ages hides exactly the invoice you need to chase.
+AR Weighted Average Days =
+    DIVIDE (
+        SUMX (
+            FILTER ( fct_Aging, fct_Aging[Ledger] = "AR" ),
+            fct_Aging[OpenBalance] * fct_Aging[DaysPastDue]
+        ),
+        [AR Outstanding]
+    )
+    formatString: "0"
+
+/// Days sales outstanding, on a trailing 90-day basis.
+/// Guarded against a zero-revenue window, which would otherwise divide by zero
+/// and render as a blank tile that reads like missing data.
+Days Sales Outstanding =
+    VAR Revenue90 =
+        CALCULATE (
+            [Billed to Date],
+            DATESINPERIOD ( dim_Date[Date], MAX ( dim_Date[Date] ), -90, DAY )
+        )
+    RETURN
+        IF ( Revenue90 > 0, DIVIDE ( [AR Outstanding] * 90, Revenue90 ) )
+    formatString: "0"
+
+Invoices Outstanding =
+    COALESCE ( CALCULATE ( COUNTROWS ( fct_Aging ), fct_Aging[Ledger] = "AR" ), 0 )
+    formatString: "#,0"
+
+// ============================================================ 10 Payables & Cash
+
+AP Outstanding = CALCULATE ( SUM ( fct_Aging[OpenBalance] ), fct_Aging[Ledger] = "AP" )
+    formatString: "$#,0"
+
+AP Overdue =
+    CALCULATE ( SUM ( fct_Aging[OpenBalance] ), fct_Aging[Ledger] = "AP", fct_Aging[IsOverdue] = TRUE )
+    formatString: "$#,0"
+
+/// Receivables less payables. Working capital tied up in the business.
+/// Both sides are positive in fct_Aging, so this subtraction is the only place
+/// the relationship between them is expressed.
+Net Working Capital = [AR Outstanding] - [AP Outstanding]
+    formatString: "$#,0"
+
+Expected Collections = CALCULATE ( SUM ( fct_CashForecast[Amount] ), fct_CashForecast[Flow] = "Collections" )
+    formatString: "$#,0"
+
+Expected Payments = CALCULATE ( SUM ( fct_CashForecast[Amount] ), fct_CashForecast[Flow] = "Payments" )
+    formatString: "$#,0"
+
+/// Collections less payments over the selected weeks. Already signed in
+/// fct_CashForecast, so this is a plain sum.
+Net Cash Movement = SUM ( fct_CashForecast[Amount] )
+    formatString: "$#,0"
+
+/// Running cash position across the forecast window. This is the shape the CEO
+/// actually reads - the trough matters more than the total.
+Cumulative Cash Position =
+    CALCULATE (
+        [Net Cash Movement],
+        FILTER (
+            ALLSELECTED ( fct_CashForecast[WeekStart] ),
+            fct_CashForecast[WeekStart] <= MAX ( fct_CashForecast[WeekStart] )
+        )
+    )
+    formatString: "$#,0"
+
+/// Committed cash movement only - invoices raised and bills received. It does
+/// NOT include work in backlog that has not been billed, because turning
+/// backlog into cash needs a billing schedule and collection assumptions the
+/// Controller has not given us. Inventing them would put a confident line on a
+/// chart with nothing behind it.
+Cash Forecast Basis = "Committed AR and AP only - excludes unbilled backlog"
+
+// ============================================================ 11 Capacity
+
+Labour Hours = SUM ( fct_LabourHours[Hours] )
+    formatString: "#,0.0"
+
+Labour Cost = SUM ( fct_LabourHours[LabourCost] )
+    formatString: "$#,0"
+
+Billable Hours =
+    COALESCE ( CALCULATE ( [Labour Hours], fct_LabourHours[IsBillable] = TRUE ), 0 )
+    formatString: "#,0.0"
+
+/// The core capacity number: what share of paid hours can be charged on.
+Utilisation = DIVIDE ( [Billable Hours], [Labour Hours] )
+    formatString: "0.0%"
+
+/// Value of billable hours at the client rate, less what those hours cost.
+/// Uses BillableValue and LabourCost, which are computed from the billing rate
+/// and the COST rate respectively - conflating the two is the classic way to
+/// make every job look profitable.
+Labour Margin = SUM ( fct_LabourHours[BillableValue] ) - [Labour Cost]
+    formatString: "$#,0"
+
+Unattributed Hours =
+    COALESCE ( CALCULATE ( [Labour Hours], ISBLANK ( fct_LabourHours[ProjectKey] ) ), 0 )
+    formatString: "#,0.0"

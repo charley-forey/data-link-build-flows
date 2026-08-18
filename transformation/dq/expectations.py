@@ -272,6 +272,129 @@ def freshness_expectations() -> list[Expectation]:
     ]
 
 
+def phase2_expectations() -> list[Expectation]:
+    """Pipeline, receivables, payables, cash and labour.
+
+    The accounting identities here are ERROR because they define what the
+    numbers mean; everything describing the state of the business is WARN.
+    """
+    return [
+        unique_key("dim_DealStage", ["DealStageKey"]),
+        unique_key("dim_Owner", ["OwnerKey"]),
+        unique_key("fct_Pipeline", ["DealKey"]),
+        unique_key("fct_Aging", ["AgingKey"]),
+        referential("fct_Pipeline", "DealStageKey", "dim_DealStage", "DealStageKey"),
+        referential("fct_Pipeline", "OwnerKey", "dim_Owner", "OwnerKey"),
+        referential("fct_Pipeline", "MonthStart", "dim_Date", "Date"),
+
+        custom(
+            name="fct_Pipeline.weighted_identity",
+            table="fct_Pipeline",
+            failing_sql=(
+                "SELECT * FROM fct_Pipeline "
+                "WHERE ABS(WeightedAmount - (Amount * WinProbability)) > 0.01"
+            ),
+            severity=SEVERITY_ERROR,
+            description="weighted amount = amount x win probability",
+        ),
+        in_range("fct_Pipeline", "WinProbability", 0.0, 1.0, severity=SEVERITY_ERROR),
+        custom(
+            name="fct_Pipeline.closed_deals_excluded",
+            table="fct_Pipeline",
+            failing_sql=(
+                "SELECT p.* FROM fct_Pipeline p "
+                "JOIN dim_DealStage s ON s.DealStageKey = p.DealStageKey "
+                "WHERE s.IsClosedStage"
+            ),
+            severity=SEVERITY_ERROR,
+            description=(
+                "a closed deal must never sit in the pipeline - closed-won especially, "
+                "because it makes a pipeline look healthy while it is emptying"
+            ),
+        ),
+        custom(
+            name="fct_Pipeline.past_close_date",
+            table="fct_Pipeline",
+            failing_sql="SELECT * FROM fct_Pipeline WHERE IsPastCloseDate",
+            severity=SEVERITY_WARN,
+            description="open deals whose close date has already passed - the forecast is stale",
+        ),
+
+        # ---------------------------------------------------------- cash
+        custom(
+            name="fct_Aging.no_negative_balances",
+            table="fct_Aging",
+            failing_sql="SELECT * FROM fct_Aging WHERE OpenBalance < 0",
+            severity=SEVERITY_ERROR,
+            description=(
+                "fct_Aging states magnitude; direction is applied in the cash "
+                "forecast. A negative here means a sign was baked in twice."
+            ),
+        ),
+        custom(
+            name="fct_CashForecast.collections_positive",
+            table="fct_CashForecast",
+            failing_sql="SELECT * FROM fct_CashForecast WHERE Flow = 'Collections' AND Amount < 0",
+            severity=SEVERITY_ERROR,
+            description="money coming in is positive",
+        ),
+        custom(
+            name="fct_CashForecast.payments_negative",
+            table="fct_CashForecast",
+            failing_sql="SELECT * FROM fct_CashForecast WHERE Flow = 'Payments' AND Amount > 0",
+            severity=SEVERITY_ERROR,
+            description="money going out is negative",
+        ),
+        custom(
+            name="fct_Aging.ar_over_90",
+            table="fct_Aging",
+            failing_sql="SELECT * FROM fct_Aging WHERE Ledger = 'AR' AND AgingBucket = '90+'",
+            severity=SEVERITY_WARN,
+            description="receivables over 90 days - collection risk",
+        ),
+        custom(
+            name="fct_Aging.ap_overdue",
+            table="fct_Aging",
+            failing_sql="SELECT * FROM fct_Aging WHERE Ledger = 'AP' AND IsOverdue",
+            severity=SEVERITY_WARN,
+            description="bills already past due",
+        ),
+        custom(
+            name="fct_Aging.missing_due_date",
+            table="fct_Aging",
+            failing_sql="SELECT * FROM fct_Aging WHERE DueDate IS NULL",
+            severity=SEVERITY_WARN,
+            description=(
+                "no due date, so this document cannot be placed in the cash "
+                "forecast at all - it is invisible rather than merely late"
+            ),
+        ),
+
+        # ---------------------------------------------------------- labour
+        custom(
+            name="fct_LabourHours.cost_not_billing_rate",
+            table="fct_LabourHours",
+            failing_sql=(
+                "SELECT * FROM fct_LabourHours "
+                "WHERE Hours > 0 AND LabourCost > 0 AND BillableValue > 0 "
+                "  AND LabourCost > BillableValue"
+            ),
+            severity=SEVERITY_WARN,
+            description=(
+                "labour costing more than it bills - either a loss-making rate or "
+                "the billing rate has been used as cost somewhere"
+            ),
+        ),
+        custom(
+            name="fct_LabourHours.unattributed_hours",
+            table="fct_LabourHours",
+            failing_sql="SELECT * FROM fct_LabourHours WHERE ProjectKey IS NULL",
+            severity=SEVERITY_WARN,
+            description="hours not attributable to any project - capacity that cannot be costed",
+        ),
+    ]
+
+
 def all_expectations() -> Sequence[Expectation]:
     return [
         *dimension_expectations(),
@@ -280,6 +403,7 @@ def all_expectations() -> Sequence[Expectation]:
         *accounting_expectations(),
         *reconciliation_expectations(),
         *freshness_expectations(),
+        *phase2_expectations(),
     ]
 
 

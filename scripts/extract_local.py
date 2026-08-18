@@ -242,7 +242,114 @@ def extract_qbo(batch_id: str, only: str | None, _: int | None) -> list[tuple]:
     return summary
 
 
-EXTRACTORS = {"procore": extract_procore, "quickbooks": extract_qbo}
+def extract_hubspot(batch_id: str, only: str | None, _: int | None) -> list[tuple]:
+    import requests
+    import yaml
+
+    import hubspot_extract as hx
+    from ratelimit import RateLimitedSession
+
+    token = fc.get_secret("HUBSPOT_PRIVATE_APP_TOKEN")
+    problem = hx.check_token_shape(token)
+    if problem:
+        print(f"warning: {problem}\n")
+
+    headers = hx.build_headers(token)
+    session = RateLimitedSession(requests.Session(), header_units="milliseconds")
+
+    with open(ROOT / "ingestion/hubspot/config/objects.yml", encoding="utf-8") as handle:
+        config = yaml.safe_load(handle)
+
+    out = LANDING / batch_id
+    summary: list[tuple] = []
+
+    for entry in config["objects"]:
+        name = entry["name"]
+        if only and name.lower() != only.lower():
+            continue
+        spec = hx.ObjectSpec(
+            name=name,
+            object_type=entry["object_type"],
+            bronze_table=entry["bronze_table"],
+            properties=tuple(entry.get("properties") or ()),
+            associations=tuple(entry.get("associations") or ()),
+        )
+        try:
+            records = list(hx.iter_objects(session, headers, spec))
+        except Exception as exc:  # noqa: BLE001
+            print(f"  {name:20} ERROR {exc}")
+            summary.append((name, 0, f"error: {type(exc).__name__}"))
+            continue
+
+        ingested_at = fc.utc_now()
+        rows = [
+            {
+                **hx.to_bronze_row(record, spec, ingested_at),
+                "_batch_id": batch_id,
+                "_row_hash": fc.row_hash(record),
+            }
+            for record in records
+        ]
+        if rows:
+            _write(out / f"{spec.bronze_table}.jsonl", rows)
+        print(f"  {name:20} {len(rows):6,d} row(s)")
+        summary.append((name, len(rows), "full"))
+
+    # Pipelines and owners are not CRM objects and do not page the same way, so
+    # they use dedicated helpers. Pipelines matter more than they look: the win
+    # probability lives on the STAGE, and without it there is no weighted
+    # forecast at all.
+    reference = {e["name"]: e["bronze_table"] for e in config.get("reference", [])}
+
+    for name, fetch in (("deal_pipelines", hx.fetch_pipelines), ("owners", hx.fetch_owners)):
+        table = reference.get(name)
+        if not table or (only and name.lower() != only.lower()):
+            continue
+        try:
+            records = fetch(session, headers)
+        except Exception as exc:  # noqa: BLE001
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            if status == 403:
+                # A missing scope, not a broken integration. dim_Owner carries a
+                # key-0 "Unassigned" row, so the model still builds - deals just
+                # cannot be attributed to a salesperson until the scope is added.
+                print(
+                    f"  {name:20} skipped - the private app lacks the scope for this "
+                    f"endpoint.\n{'':22}Add crm.objects.owners.read in HubSpot > Private "
+                    f"Apps and re-run."
+                )
+                summary.append((name, 0, "scope_missing"))
+                continue
+            print(f"  {name:20} ERROR {exc}")
+            summary.append((name, 0, f"error: {type(exc).__name__}"))
+            continue
+
+        ingested_at = fc.utc_now()
+        spec = hx.ObjectSpec(name=name, object_type=name, bronze_table=table)
+        rows = [
+            {
+                **hx.to_bronze_row(record, spec, ingested_at),
+                "_batch_id": batch_id,
+                "_row_hash": fc.row_hash(record),
+            }
+            for record in records
+        ]
+        if rows:
+            _write(out / f"{table}.jsonl", rows)
+        extra = ""
+        if name == "deal_pipelines":
+            extra = f"  ({sum(len(r.get('stages') or []) for r in records)} stages)"
+        print(f"  {name:20} {len(rows):6,d} row(s){extra}")
+        summary.append((name, len(rows), "full"))
+
+    return summary
+
+
+EXTRACTORS = {
+    "procore": extract_procore,
+    "quickbooks": extract_qbo,
+    "hubspot": extract_hubspot,
+}
 
 
 def main() -> int:
@@ -261,7 +368,7 @@ def main() -> int:
     summary = EXTRACTORS[args.source](batch_id, args.endpoint, args.max_projects)
 
     total = sum(count for _, count, _ in summary)
-    problems = [n for n, _, s in summary if s not in ("full", "skipped", "report")]
+    problems = [n for n, _, s in summary if s not in ("full", "skipped", "report", "scope_missing")]
     empty = [n for n, c, s in summary if c == 0 and s == "full"]
 
     print(f"\n{total:,} row(s) landed in {LANDING / batch_id}")

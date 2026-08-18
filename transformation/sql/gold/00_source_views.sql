@@ -222,21 +222,84 @@ FROM dl_silver_project_crosswalk;
 
 -- ---------------------------------------------------------------- HubSpot
 --
--- EMPTY BY CONSTRUCTION until phase 2. Declared rather than omitted so the gold
--- files that reference it compile, run and test today, and go live by changing
--- this one view - not by editing every consumer.
+-- LIVE as of phase 2. This view was declared empty-with-real-types through
+-- phase 1 so every downstream file compiled and tested before HubSpot existed;
+-- switching it on was a change to this file alone, exactly as intended.
 
 CREATE OR REPLACE TEMPORARY VIEW sv_deals AS
 SELECT
-    CAST(NULL AS STRING) AS deal_id,
-    CAST(NULL AS STRING) AS deal_name,
-    CAST(NULL AS STRING) AS pipeline_id,
-    CAST(NULL AS STRING) AS stage_id,
-    CAST(NULL AS STRING) AS owner_id,
-    CAST(NULL AS DOUBLE) AS amount,
-    CAST(NULL AS DOUBLE) AS stage_probability,
-    CAST(NULL AS DATE)   AS close_date,
-    CAST(NULL AS DATE)   AS create_date,
-    CAST(NULL AS BOOLEAN) AS is_closed,
-    CAST(NULL AS BOOLEAN) AS is_closed_won
-WHERE 1 = 0;
+    CAST(deal_id          AS STRING)  AS deal_id,
+    CAST(deal_name        AS STRING)  AS deal_name,
+    CAST(pipeline_id      AS STRING)  AS pipeline_id,
+    CAST(stage_id         AS STRING)  AS stage_id,
+    CAST(owner_id         AS STRING)  AS owner_id,
+    CAST(deal_type        AS STRING)  AS deal_type,
+    CAST(amount           AS DOUBLE)  AS amount,
+    CAST(deal_probability AS DOUBLE)  AS deal_probability,
+    CAST(close_date       AS DATE)    AS close_date,
+    CAST(create_date      AS DATE)    AS create_date,
+    CAST(is_closed        AS BOOLEAN) AS is_closed,
+    CAST(is_closed_won    AS BOOLEAN) AS is_closed_won
+FROM dl_silver_hubspot_deals;
+
+CREATE OR REPLACE TEMPORARY VIEW sv_deal_stages AS
+SELECT
+    CAST(stage_id        AS STRING)  AS stage_id,
+    CAST(stage_name      AS STRING)  AS stage_name,
+    CAST(pipeline_id     AS STRING)  AS pipeline_id,
+    CAST(pipeline_name   AS STRING)  AS pipeline_name,
+    CAST(display_order   AS INT)     AS display_order,
+    CAST(win_probability AS DOUBLE)  AS win_probability,
+    CAST(is_closed_stage AS BOOLEAN) AS is_closed_stage
+FROM dl_silver_hubspot_stages;
+
+CREATE OR REPLACE TEMPORARY VIEW sv_owners AS
+SELECT
+    CAST(owner_id    AS STRING) AS owner_id,
+    CAST(owner_name  AS STRING) AS owner_name,
+    CAST(owner_email AS STRING) AS owner_email
+FROM dl_silver_hubspot_owners;
+
+-- ---------------------------------------------------------------- cash
+
+CREATE OR REPLACE TEMPORARY VIEW sv_ar_open AS
+SELECT
+    CAST(qbo_invoice_id  AS STRING) AS document_id,
+    CAST(doc_number      AS STRING) AS doc_number,
+    CAST(qbo_customer_id AS STRING) AS counterparty_id,
+    CAST(customer_name   AS STRING) AS counterparty_name,
+    CAST(invoice_date    AS DATE)   AS document_date,
+    CAST(due_date        AS DATE)   AS due_date,
+    CAST(total_amount    AS DOUBLE) AS total_amount,
+    CAST(open_balance    AS DOUBLE) AS open_balance,
+    CAST(days_past_due   AS INT)    AS days_past_due,
+    CAST(aging_bucket    AS STRING) AS aging_bucket
+FROM dl_silver_qbo_ar_open_items;
+
+CREATE OR REPLACE TEMPORARY VIEW sv_ap_open AS
+SELECT
+    CAST(qbo_bill_id    AS STRING) AS document_id,
+    CAST(doc_number     AS STRING) AS doc_number,
+    CAST(qbo_vendor_id  AS STRING) AS counterparty_id,
+    CAST(vendor_name    AS STRING) AS counterparty_name,
+    CAST(bill_date      AS DATE)   AS document_date,
+    CAST(due_date       AS DATE)   AS due_date,
+    CAST(total_amount   AS DOUBLE) AS total_amount,
+    CAST(open_balance   AS DOUBLE) AS open_balance,
+    CAST(days_past_due  AS INT)    AS days_past_due,
+    CAST(aging_bucket   AS STRING) AS aging_bucket
+FROM dl_silver_qbo_ap_open_items;
+
+CREATE OR REPLACE TEMPORARY VIEW sv_time_activities AS
+SELECT
+    CAST(time_activity_id AS STRING) AS time_activity_id,
+    CAST(qbo_customer_id  AS STRING) AS qbo_customer_id,
+    CAST(worker_id        AS STRING) AS worker_id,
+    CAST(worker_name      AS STRING) AS worker_name,
+    CAST(worker_type      AS STRING) AS worker_type,
+    CAST(billable_status  AS STRING) AS billable_status,
+    CAST(activity_date    AS DATE)   AS activity_date,
+    CAST(hours            AS DOUBLE) AS hours,
+    CAST(cost_rate        AS DOUBLE) AS cost_rate,
+    CAST(billing_rate     AS DOUBLE) AS billing_rate
+FROM dl_silver_qbo_time_activities;
