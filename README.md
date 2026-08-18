@@ -160,10 +160,31 @@ contamination, which is the thing that silently breaks Direct Lake.
 - Both pipelines wired with `Succeeded` dependencies.
 - Semantic model built over the gold schema with relationships.
 
-**Blocked on credentials**
+**Live source verification**
 
-- **QuickBooks ingestion cannot run.** `.env` has a client id and secret but no refresh token and no realm id. Run `scripts/qbo_authorize.py` once, interactively, to obtain them.
-- Procore ingestion is untested against a live tenant. It needs the sandbox credentials present and the standard budget view name confirmed.
+| Source | State | Evidence |
+|---|---|---|
+| **Procore** | connected | 374 rows across 24 endpoints, landed to bronze. Includes budget-view detail rows (the EAC spine). |
+| **HubSpot** | connected | Authenticates on the `pat-` service token; 1 deal pipeline, 7 stages. Confirms the `2026-03` API path. |
+| **QuickBooks** | blocked | Needs one interactive OAuth consent: `python scripts/qbo_authorize.py` |
+
+```bash
+python scripts/smoke_test.py            # one read-only call per source
+python scripts/extract_local.py --source procore   # full registry -> JSONL
+```
+
+`smoke_test.py` exists because a credential problem found locally costs seconds,
+while the same problem found inside a Fabric notebook costs a Spark session
+startup and a trip through the driver logs.
+
+**Four defects the live APIs exposed** (none of which offline tests could catch):
+
+1. `PROCORE_SANDBOX_URL` held a *browser* URL, so every request was built under `/company/home`. `normalise_base_url()` now reduces any input to a bare origin.
+2. The vendors path was wrong — `/rest/v1.0/vendors` (query-scoped), not `/companies/{id}/vendors`.
+3. A project without a tool enabled answers 403/404, and that was aborting the whole endpoint for every other project. Now `ToolUnavailable`: counted, skipped, reported.
+4. **The budget money columns are named with spaces** (`Job to Date Costs`). `$.dot` notation cannot parse those — it returns NULL, COALESCEs to 0, and yields a WIP schedule that passes every accounting identity while being entirely wrong. Now bracket notation, pinned by `tests/test_silver_keys.py` against a captured payload.
+
+Also measured: Procore's real quota on this tenant is **25 requests per ~10s window**, not the 600/hour that is widely quoted. The rate-limit reserve now scales to the limit the API reports.
 
 **Not built yet (phase 2)**
 
