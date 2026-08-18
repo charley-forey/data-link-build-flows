@@ -1,0 +1,94 @@
+# HubSpot CRM object registry for Data Link Technology Services (phase 2).
+#
+# PROPERTIES ARE EXPLICIT, NOT WILDCARD. HubSpot portals accumulate hundreds of
+# custom properties; asking for all of them is slow and produces a bronze schema
+# that changes whenever a sales admin adds a field. Listing what we need means a
+# new property is a deliberate one-line change, not a surprise.
+#
+# Conversely, the raw payload IS stored unparsed in bronze, so a property we
+# forgot to request is a config change plus a re-pull - not a re-model.
+#
+# Fields
+#   name          logical name; also the bronze `_source_endpoint` value
+#   object_type   HubSpot object type in the URL
+#   bronze_table  destination in DL_Bronze_Lakehouse
+#   properties    explicit property list
+#   associations  related object types to return alongside
+
+objects:
+
+  - name: deals
+    object_type: deals
+    bronze_table: dl_bronze_hubspot_deals
+    properties:
+      - dealname
+      - amount
+      - dealstage
+      - pipeline
+      - closedate
+      - createdate
+      - hs_lastmodifieddate
+      - hs_deal_stage_probability
+      - hs_forecast_amount
+      - hs_forecast_probability
+      - hs_is_closed
+      - hs_is_closed_won
+      - hs_projected_amount
+      - dealtype
+      - hubspot_owner_id
+      - description
+    associations:
+      - companies
+      - contacts
+
+  - name: companies
+    object_type: companies
+    bronze_table: dl_bronze_hubspot_companies
+    properties:
+      - name
+      - domain
+      - industry
+      - city
+      - state
+      - annualrevenue
+      - createdate
+      - hs_lastmodifieddate
+      - hubspot_owner_id
+
+  - name: contacts
+    object_type: contacts
+    bronze_table: dl_bronze_hubspot_contacts
+    properties:
+      - firstname
+      - lastname
+      - email
+      - phone
+      - company
+      - jobtitle
+      - createdate
+      - hs_lastmodifieddate
+      - hubspot_owner_id
+
+  - name: line_items
+    object_type: line_items
+    bronze_table: dl_bronze_hubspot_line_items
+    properties:
+      - name
+      - quantity
+      - price
+      - amount
+      - hs_product_id
+      - createdate
+      - hs_lastmodifieddate
+
+# Fetched by dedicated helpers rather than the generic object loop, because they
+# are not CRM objects and do not page the same way.
+#
+# Pipelines matter more than they look: WIN PROBABILITY LIVES ON THE STAGE
+# DEFINITION, not on the deal. Weighted pipeline forecasting is impossible
+# without this table.
+reference:
+  - name: deal_pipelines
+    bronze_table: dl_bronze_hubspot_pipelines
+  - name: owners
+    bronze_table: dl_bronze_hubspot_owners

@@ -1,0 +1,236 @@
+# Procore endpoint registry for Data Link Technology Services.
+#
+# ADDING AN ENDPOINT IS AN ENTRY HERE, NOT A NEW NOTEBOOK. That is the whole
+# design: one extractor reads this file, so thirty endpoints cost thirty entries
+# rather than thirty notebooks that each drift in their own direction.
+#
+# Fields
+#   name          logical name; also the bronze `_source_endpoint` value
+#   path          template; {company_id} / {project_id} / {parent_id} are filled
+#                 per scope. If the placeholder is absent, the extractor passes
+#                 the scope as a QUERY parameter instead - Procore is
+#                 inconsistent about which endpoints use which.
+#   scope         company | project | parent
+#   api_version   documentation only; Procore-Company-Id is sent on ALL versions
+#   bronze_table  destination table in DL_Bronze_Lakehouse
+#   key           natural key used for the MERGE (default "id")
+#   incremental   watermark filter param; omit for a full reload.
+#                 A full reload is still idempotent - the load is a MERGE.
+#   parent        for scope: parent - which endpoint supplies {parent_id}, the
+#                 field to read it from, and optionally a where_field/where_value
+#                 restricting WHICH parents spawn children.
+#   date_range_days  for endpoints that answer 200-with-zero-rows unless given
+#                 an explicit date window.
+#   unwrap        response key holding the array, when it is not a bare array.
+#
+# INCREMENTAL DISCIPLINE
+#   `incremental: filters[updated_at]` appears ONLY where the endpoint is
+#   confirmed to accept it (see resources/procore/endpoints-cheatsheet.md, and
+#   the `# cheatsheet:` reference on each entry). Several Procore endpoints
+#   document filters[created_at] but NOT filters[updated_at]. Incrementing on
+#   created_at would miss STATUS CHANGES on existing records - a change order
+#   moving from pending to approved would never be picked up, and the contract
+#   value would be quietly wrong rather than obviously missing.
+#
+# RATE LIMIT
+#   600 requests/hour/client. Project-scoped endpoints multiply by the number of
+#   ACTIVE projects, so every entry below that could be company-scoped, is.
+
+endpoints:
+
+  # ------------------------------------------------------------ dimensions
+
+  - name: projects
+    path: /rest/v1.0/companies/{company_id}/projects
+    scope: company
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_projects
+    incremental: filters[updated_at]
+
+  - name: vendors
+    path: /rest/v1.0/companies/{company_id}/vendors
+    scope: company
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_vendors
+    incremental: filters[updated_at]
+
+  - name: offices
+    path: /rest/v1.0/offices
+    scope: company
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_offices
+
+  - name: departments
+    path: /rest/v1.0/departments
+    scope: company
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_departments
+
+  - name: project_regions
+    path: /rest/v1.0/companies/{company_id}/project_regions
+    scope: company
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_project_regions
+
+  - name: project_stages
+    path: /rest/v1.0/companies/{company_id}/project_stages
+    scope: company
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_project_stages
+
+  - name: cost_codes
+    # project_id goes in the query string, not the path.
+    path: /rest/v1.0/cost_codes
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_cost_codes
+
+  # ------------------------------------------------------------ the WIP spine
+  #
+  # Budget detail rows are the canonical EAC. Reconstructing EAC from raw
+  # commitments plus direct costs is fragile and would never tie to the number
+  # the project manager sees on their screen - which is the number they will
+  # defend in the meeting.
+
+  - name: budget_views
+    path: /rest/v1.0/budget_views
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_budget_views
+
+  - name: budget_detail_rows
+    path: /rest/v1.0/budget_views/{parent_id}/detail_rows
+    scope: parent
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_budget_detail_rows
+    parent:
+      endpoint: budget_views
+      field: id
+      # PIN TO ONE NAMED VIEW. Procore returns a DIFFERENT COLUMN SET per budget
+      # view, so pulling every view produces a table whose schema depends on
+      # which view happened to come back first. Confirm the exact name with the
+      # Controller before the first production run - this is open item #2.
+      where_field: name
+      where_value: "Data Link Standard Budget View"
+
+  - name: budget_detail_columns
+    path: /rest/v1.0/budget_views/{parent_id}/budget_detail_columns
+    scope: parent
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_budget_detail_columns
+    parent:
+      endpoint: budget_views
+      field: id
+      where_field: name
+      where_value: "Data Link Standard Budget View"
+
+  - name: manual_forecast_line_items
+    path: /rest/v1.0/projects/{project_id}/manual_forecast_line_items
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_manual_forecast_line_items
+
+  # ------------------------------------------------------------ contract value
+
+  - name: prime_contracts
+    path: /rest/v1.0/prime_contracts
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_prime_contracts
+    incremental: filters[updated_at]
+
+  - name: prime_contract_line_items
+    path: /rest/v1.0/prime_contracts/{parent_id}/line_items
+    scope: parent
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_prime_contract_line_items
+    parent:
+      endpoint: prime_contracts
+      field: id
+
+  - name: prime_change_orders
+    path: /rest/v1.0/projects/{project_id}/prime_change_orders
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_prime_change_orders
+    incremental: filters[updated_at]
+
+  - name: payment_applications
+    # Owner billings. Billed-to-date in the WIP schedule comes from here.
+    path: /rest/v1.0/prime_contracts/{parent_id}/payment_applications
+    scope: parent
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_payment_applications
+    parent:
+      endpoint: prime_contracts
+      field: id
+
+  # ------------------------------------------------------------ committed cost
+
+  - name: commitments
+    path: /rest/v1.0/commitments
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_commitments
+
+  - name: purchase_order_contracts
+    path: /rest/v1.0/purchase_order_contracts
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_purchase_order_contracts
+    incremental: filters[updated_at]
+
+  - name: purchase_order_line_items
+    path: /rest/v1.0/purchase_order_contracts/{parent_id}/line_items
+    scope: parent
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_purchase_order_line_items
+    parent:
+      endpoint: purchase_order_contracts
+      field: id
+
+  - name: work_order_contracts
+    path: /rest/v1.0/work_order_contracts
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_work_order_contracts
+    incremental: filters[updated_at]
+
+  - name: work_order_line_items
+    path: /rest/v1.0/work_order_contracts/{parent_id}/line_items
+    scope: parent
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_work_order_line_items
+    parent:
+      endpoint: work_order_contracts
+      field: id
+
+  - name: commitment_change_orders
+    path: /rest/v1.0/projects/{project_id}/commitment_change_orders
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_commitment_change_orders
+    incremental: filters[updated_at]
+
+  # ------------------------------------------------------------ actual cost
+
+  - name: direct_costs
+    path: /rest/v1.1/projects/{project_id}/direct_costs
+    scope: project
+    api_version: "1.1"
+    bronze_table: dl_bronze_procore_direct_costs
+    incremental: filters[updated_at]
+
+  - name: direct_cost_line_items
+    path: /rest/v1.0/projects/{project_id}/direct_costs/line_items
+    scope: project
+    api_version: "1.0"
+    bronze_table: dl_bronze_procore_direct_cost_line_items
+
+  - name: requisitions
+    # Subcontractor invoices.
+    path: /rest/v1.1/requisitions
+    scope: project
+    api_version: "1.1"
+    bronze_table: dl_bronze_procore_requisitions
+    incremental: filters[updated_at]

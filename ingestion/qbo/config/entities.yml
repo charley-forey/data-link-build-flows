@@ -1,0 +1,133 @@
+# QuickBooks Online entity registry for Data Link Technology Services.
+#
+# QBO has no path-scoped hierarchy the way Procore does - everything is a query
+# against one company (realm). So this config is flatter: an entity name, where
+# it lands, and whether it participates in change-data-capture.
+#
+# Fields
+#   name          QBO entity name, used verbatim in `SELECT * FROM <name>`
+#   bronze_table  destination in DL_Bronze_Lakehouse
+#   cdc           true if the entity is supported by the /cdc endpoint
+#   full_reload   true for small list entities where incremental buys nothing
+#                 and a full pull is simpler and self-healing
+#
+# INCREMENTAL STRATEGY
+#   /cdc looks back AT MOST 30 DAYS. Anything that changed earlier than that is
+#   invisible to it. So `cdc: true` entities are pulled incrementally on the
+#   daily run AND fully reconciled on a weekly schedule. Without the reconcile,
+#   a record edited during an outage longer than 30 days is wrong forever and
+#   nothing reports it.
+#
+# JOB COSTING
+#   The link to Procore is Customer, filtered to the Customer:Job hierarchy
+#   (Job=true / IsProject=true). Line-level CustomerRef and ClassRef carry the
+#   job dimension on transactions. Confirm with the Controller which of
+#   Customer:Job / Class / native Projects they actually use - open item #4.
+
+entities:
+
+  # ------------------------------------------------------------ lists
+  # Small, slow-changing, and everything else joins to them. Full reload: an
+  # incremental pull of 40 accounts saves nothing and can go subtly stale.
+
+  - name: Account
+    bronze_table: dl_bronze_qbo_accounts
+    full_reload: true
+
+  - name: Customer
+    # Includes jobs and projects. The Procore crosswalk target.
+    bronze_table: dl_bronze_qbo_customers
+    full_reload: true
+
+  - name: Vendor
+    bronze_table: dl_bronze_qbo_vendors
+    full_reload: true
+
+  - name: Item
+    bronze_table: dl_bronze_qbo_items
+    full_reload: true
+
+  - name: Class
+    bronze_table: dl_bronze_qbo_classes
+    full_reload: true
+
+  - name: Department
+    bronze_table: dl_bronze_qbo_departments
+    full_reload: true
+
+  - name: Term
+    bronze_table: dl_bronze_qbo_terms
+    full_reload: true
+
+  # ------------------------------------------------------------ transactions
+
+  - name: Invoice
+    bronze_table: dl_bronze_qbo_invoices
+    cdc: true
+
+  - name: Bill
+    bronze_table: dl_bronze_qbo_bills
+    cdc: true
+
+  - name: Purchase
+    # Expenses and credit-card charges. A large share of job cost lands here.
+    bronze_table: dl_bronze_qbo_purchases
+    cdc: true
+
+  - name: JournalEntry
+    bronze_table: dl_bronze_qbo_journal_entries
+    cdc: true
+
+  - name: Payment
+    bronze_table: dl_bronze_qbo_payments
+    cdc: true
+
+  - name: BillPayment
+    bronze_table: dl_bronze_qbo_bill_payments
+    cdc: true
+
+  - name: VendorCredit
+    bronze_table: dl_bronze_qbo_vendor_credits
+    cdc: true
+
+  - name: CreditMemo
+    bronze_table: dl_bronze_qbo_credit_memos
+    cdc: true
+
+  - name: Deposit
+    bronze_table: dl_bronze_qbo_deposits
+    cdc: true
+
+  - name: TimeActivity
+    # Labour hours, for capacity planning in phase 2.
+    bronze_table: dl_bronze_qbo_time_activities
+    cdc: true
+
+# Reports are not entities - they return a nested Rows/ColData tree rather than
+# a list, so they are fetched separately and stored whole. Flattening happens in
+# silver where the shape is visible in SQL and reviewable in a diff.
+#
+#   accounting_method: Accrual matches how a WIP schedule is prepared. Cash
+#   basis would understate both cost and revenue and the schedule would not tie.
+reports:
+
+  - name: GeneralLedger
+    bronze_table: dl_bronze_qbo_general_ledger
+    params:
+      accounting_method: Accrual
+      minorversion: "75"
+
+  - name: ProfitAndLossDetail
+    # The tie-out target for fct_CostTransaction.
+    bronze_table: dl_bronze_qbo_profit_and_loss_detail
+    params:
+      accounting_method: Accrual
+
+  - name: ARAgingDetail
+    bronze_table: dl_bronze_qbo_ar_aging_detail
+    params: {}
+
+  - name: TrialBalance
+    bronze_table: dl_bronze_qbo_trial_balance
+    params:
+      accounting_method: Accrual
