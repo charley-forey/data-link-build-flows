@@ -295,6 +295,30 @@
 </section>
 
 <section>
+  <div class="label">Be clear about this</div>
+  <h2>One step is still started by hand</h2>
+  <div class="prose">
+    <p>
+      Pulling data from the three APIs is currently kicked off manually. Everything after that
+      point &mdash; validating it, building the reporting model, running the 53 checks, refreshing
+      the report &mdash; is automatic.
+    </p>
+    <p>
+      The reason is narrow and fixable. Credentials have to live somewhere the platform can read
+      them safely, which means an Azure Key Vault, and one has not been set up yet. So the three
+      extraction steps run from a workstation where the credentials already are, and hand their
+      output to the automated half.
+    </p>
+    <p>
+      We deliberately did <strong>not</strong> work around this by pasting credentials into Fabric
+      settings &mdash; those are readable by anyone with workspace access, which is not an
+      acceptable home for the keys to your accounting system. A scheduled overnight refresh is not
+      possible until the vault exists, and it is the first item in the sequence below.
+    </p>
+  </div>
+</section>
+
+<section>
   <div class="label">Verified</div>
   <h2>What is running today</h2>
   <div class="prose">
@@ -612,6 +636,11 @@
           <td>Variance thresholds</td>
           <td>How far Procore and QuickBooks may disagree on a project before someone looks.</td>
         </tr>
+        <tr>
+          <td>Is an Azure subscription available?</td>
+          <td>A Key Vault is what lets the platform hold the three sets of credentials safely,
+              and it is the only thing preventing a scheduled overnight refresh.</td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -622,9 +651,9 @@
   <h2>From here</h2>
   <ol class="steps">
     <li>
-      <strong>Reconcile one historical month</strong>
-      <p>Rebuild a WIP schedule the Controller has already produced by hand and tie it out line by
-      line. This is the real acceptance test; everything before it is a precondition.</p>
+      <strong>Set up a Key Vault</strong>
+      <p>The one thing standing between this and no-touch operation. Until it exists the three
+      API pulls are started by hand; everything after them is already automatic.</p>
     </li>
     <li>
       <strong>Point at production Procore</strong>

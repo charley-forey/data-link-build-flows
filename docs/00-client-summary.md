@@ -100,6 +100,27 @@ Because these are sandboxes, the amounts are small and mostly demo data. What
 has been proven is the *machinery*: every number is derived, every accounting
 identity holds, and the checks catch what they are meant to catch.
 
+### One thing is not yet hands-off
+
+**Pulling the data from the three APIs is currently started by hand.** Everything
+after that point — validating it, building the reporting model, running the 53
+checks, refreshing the report — is automatic.
+
+The reason is narrow and fixable. Credentials for Procore, QuickBooks and
+HubSpot have to live somewhere the platform can read them safely, and that
+means an Azure Key Vault. One has not been set up yet, so the three extraction
+steps run from a workstation where the credentials already are, and hand their
+output to the automated half.
+
+We have deliberately **not** worked around this by pasting credentials into
+Fabric settings. Those are readable by anyone with access to the workspace,
+which is not an acceptable place for the keys to your accounting system.
+
+Setting up the Key Vault is a small piece of work and it is item 6 below. Until
+then, treat the platform as "one command to start, then automatic" rather than
+fully unattended — and note that a scheduled overnight refresh is not possible
+until it is done.
+
 **Live checks currently reporting:** 53 run, 0 blocking failures, 3 warnings.
 The three warnings are real conditions worth seeing, not faults — QuickBooks
 cost and labour hours that cannot yet be attributed to a project, and payables
@@ -126,13 +147,15 @@ no chart:
 3. **Materiality thresholds** for flagging a Procore↔QuickBooks cost disagreement.
 4. **Whether production Procore is a separate company ID** from the sandbox, and what request quota that tenant has.
 5. **One historical month's WIP schedule** that your Controller produced by hand. Reproducing it and tying it out line by line is the real acceptance test; everything so far is a precondition for it.
+6. **Whether an Azure subscription is available for a Key Vault.** This is what turns the platform fully unattended and makes a scheduled refresh possible. It is the only thing standing between where we are and no-touch operation.
 
 ---
 
 ## Suggested next steps
 
-1. Confirm the five items above.
-2. Point the platform at production Procore and QuickBooks.
-3. Reconcile one historical month against the Controller's own spreadsheet.
-4. Load real deals into HubSpot and the pipeline forecast starts reporting.
-5. Agree a refresh schedule (America/Phoenix — "yesterday's numbers" has to mean yesterday to whoever is reading).
+1. Confirm the six items above.
+2. Set up the Key Vault, which makes everything below unattended rather than semi-manual.
+3. Point the platform at production Procore and QuickBooks.
+4. Reconcile one historical month against the Controller's own spreadsheet. **This is the real acceptance test** — everything so far is a precondition for it.
+5. Load real deals into HubSpot and the pipeline forecast starts reporting.
+6. Agree a refresh schedule (America/Phoenix — "yesterday's numbers" has to mean yesterday to whoever is reading).
