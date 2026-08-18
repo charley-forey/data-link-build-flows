@@ -259,7 +259,7 @@
     WIP schedule the Controller assembles by hand each month.
   </p>
   <div class="meta">
-    <span>Build status &mdash; 18 Aug 2026</span>
+    <span>All three sources connected &mdash; 18 Aug 2026</span>
     <span>Workspace: BuildFlows / Data Link</span>
     <span>Phase 1 of 2</span>
   </div>
@@ -284,9 +284,9 @@
     </div>
     <div class="source">
       <h3>QuickBooks Online</h3>
-      <span class="chip wait"><span class="dot"></span>Needs consent</span>
-      <p>Client ID and secret are in place. Intuit requires one interactive browser approval
-      to issue a refresh token — a person has to click it once.</p>
+      <span class="chip ok"><span class="dot"></span>Pulling data</span>
+      <p>Authorised. 292 rows across 17 entities and 4 reports — the chart of accounts,
+      customers and jobs, bills, purchases and the general ledger.</p>
     </div>
   </div>
 </section>
@@ -302,7 +302,7 @@
     </p>
   </div>
   <div class="stats">
-    <div class="stat"><span class="n">374</span><span class="k">rows of live Procore data</span></div>
+    <div class="stat"><span class="n">666</span><span class="k">rows of live source data</span></div>
     <div class="stat"><span class="n">34</span><span class="k">quality checks run</span></div>
     <div class="stat"><span class="n">0</span><span class="k">blocking failures</span></div>
     <div class="stat"><span class="n">138</span><span class="k">offline assertions</span></div>
@@ -327,6 +327,26 @@
   <p style="font-size:0.9rem;color:var(--ink-2);margin-top:0.9rem;max-width:40rem">
     Small numbers, because this is a sandbox. The point is that every one of them is derived,
     not entered, and each identity holds.
+  </p>
+
+  <h3>The three-system link, proven</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Procore project</th><th>QuickBooks job</th><th>How</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>120149 — The Sparkling Skyrise Project</td>
+          <td>customer 8 — Freeman Sporting Goods:0969 Ocean View Road</td>
+          <td>manual override, confidence 1.00</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.9rem;color:var(--ink-2);margin-top:0.9rem;max-width:40rem">
+    The two sandboxes hold unrelated demo data, so no automatic match exists between them —
+    which makes this a clean test of the path that matters most in practice: a mapping a human
+    entered, taking precedence over everything the matcher proposes. Unmapped projects fell
+    from 10 to 9 the moment it landed, all the way through to the report.
   </p>
 
   <div class="flow" role="img" aria-label="Pipeline: three source APIs feed bronze raw payloads, then silver typed and validated data, then a gold star schema, through a data-quality gate, into the semantic model and Power BI report.">
@@ -445,13 +465,19 @@
 
 <section>
   <div class="label">Needs you</div>
-  <h2>What is blocking</h2>
+  <h2>Decisions still open</h2>
   <div class="callout">
     <p>
-      <strong>QuickBooks authorisation.</strong> Intuit's security model requires a human to approve
-      access in a browser once. It cannot be automated. Running
-      <code>python scripts/qbo_authorize.py</code> opens the consent screen and stores the result;
-      after that the connection renews itself.
+      <strong>Nothing is blocking.</strong> All three systems are connected and data flows end to
+      end. What remains are business questions only Data Link can answer — and one finding worth
+      raising early.
+    </p>
+    <p>
+      <strong>Most QuickBooks cost is not job-costed.</strong> Of the cost lines in the sandbox,
+      45 carry no customer at all, so they cannot be attributed to any project. If that pattern
+      holds in the production company, project-level cost will be incomplete no matter how good
+      the pipeline is — it is a bookkeeping practice question, not a technical one. The platform
+      reports the figure rather than hiding it.
     </p>
     <p>
       One caveat worth knowing: QuickBooks issues a <em>new</em> credential every time the old one is
