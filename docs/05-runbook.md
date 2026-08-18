@@ -141,6 +141,34 @@ from the standard ids. `dl_bronze_procore_budget_detail_columns` lists the
 actual keys for the pinned view — pin them into the COALESCE chains in
 `transformation/sql/silver/10_procore_silver.sql`.
 
+### Pipeline activity fails with `TooManyRequestsForCapacity` (HTTP 430)
+
+Observed 2026-08-18 on the first real pipeline run: Bronze→Silver succeeded, and
+Build Gold failed two seconds later with
+
+> This Spark job can't be run because you've hit spark overall capacity compute limit.
+
+This is **capacity contention, not a code fault**. Each notebook activity starts
+its own Spark session, and on a small capacity SKU the previous session has not
+finished releasing its slot when the next activity asks for one. Running
+notebooks by hand shortly before a pipeline run makes it much more likely.
+
+The pipeline behaved correctly — the `Succeeded` dependency stopped the run
+rather than letting gold rebuild over stale silver.
+
+What to do, in order:
+
+1. Wait a minute or two and re-run. The slot frees on its own.
+2. Check Workspace settings → Job management for running and queued Spark jobs,
+   and cancel anything stale.
+3. If it recurs on every scheduled run, raise `retryIntervalInSeconds` on the
+   notebook activities above the session teardown time (start at 300), or move
+   to a larger capacity SKU.
+
+Do **not** switch the dependency to `Completed` to make the run go green. That
+trades a visible failure for a silently wrong report, which is the exact bargain
+this platform refuses.
+
 ### Blocking data-quality failure
 
 The pipeline stopped on purpose. Nothing downstream ran, and the report still
