@@ -811,6 +811,31 @@ for path in files:
 '''
             ),
             cell(
+                '''# The Controller's manual crosswalk overrides.
+#
+# OVERWRITE, not merge. This CSV is the authoritative list of human decisions:
+# a row deleted from it means "that mapping was wrong", and merging would keep
+# the retracted mapping alive forever.
+REFERENCE = f"{LIB}/reference/project_crosswalk.csv"
+
+if os.path.exists(REFERENCE):
+    crosswalk = (
+        spark.read.option("header", True)
+        .schema(
+            "procore_project_id string, qbo_customer_id string, "
+            "hubspot_deal_id string, reviewed_by string, active boolean"
+        )
+        .csv(REFERENCE)
+    )
+    crosswalk.write.format("delta").mode("overwrite").option(
+        "overwriteSchema", "true"
+    ).saveAsTable("dl_bronze_reference_project_crosswalk")
+    print(f"crosswalk overrides: {crosswalk.count()} row(s)")
+else:
+    print(f"no {REFERENCE} - crosswalk will rely on automatic matching only")
+'''
+            ),
+            cell(
                 DIAG_HELPER
                 + '''
 total = sum(n for _, n in summary)
