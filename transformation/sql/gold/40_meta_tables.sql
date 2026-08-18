@@ -5,6 +5,18 @@
 -- is obviously broken, because nobody stops trusting it. These tables are what
 -- let the report say "STALE - these numbers may be weeks old" on its own face.
 
+-- A single-row anchor table that exists ONLY to hold measures.
+--
+-- Measures cannot share a name with a column on the same table, and the natural
+-- measure names collide immediately: `EAC` and `Backlog` are both columns on
+-- fct_WIP. Renaming the measures to avoid it would put "EAC Total" in front of
+-- the CEO, which is a worse outcome than one hidden table.
+--
+-- It also gives the report author one place to find every measure, grouped by
+-- display folder, instead of hunting across five fact tables.
+CREATE OR REPLACE TABLE meta_Measures AS
+SELECT CAST(1 AS INT) AS Anchor;
+
 CREATE OR REPLACE TABLE meta_PipelineRun AS
 SELECT
     batch_id                     AS BatchId,

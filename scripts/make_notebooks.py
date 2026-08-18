@@ -16,6 +16,7 @@ escaped strings inside a JSON blob.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -91,6 +92,7 @@ def run_sql_folder(folder: str, batch_id: str, step: str) -> None:
 
 DIAG_HELPER = '''\
 import json
+import os
 
 
 def write_diag(name: str, payload: dict) -> None:
@@ -358,6 +360,7 @@ for entry in entities:
             cell(
                 '''\
 import json
+import re
 
 # Reports return a nested Rows/ColData tree rather than a list, so each is
 # stored WHOLE and flattened in silver where the shape is visible in SQL.
@@ -662,8 +665,6 @@ for table in created:
             cell(
                 DIAG_HELPER
                 + '''
-import os
-
 write_diag("bootstrap", {"created": created, "existing": existing})
 print(f"\\n{len(created) + len(existing)} bronze and control tables ready")
 '''
@@ -683,25 +684,54 @@ NOTEBOOKS = {
 }
 
 
+# Modules the notebook bodies reach for. A cell that uses one without any cell
+# before it importing it raises NameError at runtime - which costs a full Spark
+# round trip to discover.
+_STDLIB = ("os", "json", "sys", "re", "time", "glob", "yaml", "uuid")
+
+
 def check(nb: dict, name: str) -> None:
-    """Compile every code cell before the notebook is written.
+    """Compile every code cell, and verify its imports, before writing.
 
-    This exists because the first deployed notebook failed in Fabric with a
-    SyntaxError pointing at its own first line: `source` had been split on "\\n"
-    with the separators dropped, and .ipynb CONCATENATES that list verbatim
-    rather than re-joining it. The whole cell arrived as one line.
+    Two bugs motivated this, both found the expensive way:
 
-    A round trip through Fabric to discover a generator bug costs several
-    minutes of Spark startup. Compiling here costs milliseconds.
+    * A SyntaxError pointing at the notebook's own first line - `source` had
+      been split on "\\n" with the separators dropped, and .ipynb CONCATENATES
+      that list verbatim rather than re-joining it, so the whole cell arrived as
+      one line.
+    * A NameError from a shared helper block that called `os.makedirs` without
+      importing `os`. Compiling does not catch that; it is a runtime name.
+
+    Both cost several minutes of Spark startup to discover. Checking here costs
+    milliseconds. Cells share one kernel, so an import in any earlier cell counts.
     """
+    imported: set[str] = set()
+
     for index, cell_ in enumerate(nb["cells"]):
         if cell_["cell_type"] != "code":
             continue
         source = "".join(cell_["source"])
+
         try:
             compile(source, f"{name}[cell {index}]", "exec")
         except SyntaxError as exc:
             raise SystemExit(f"{name} cell {index} does not compile: {exc}") from exc
+
+        for module in _STDLIB:
+            if re.search(rf"^\s*import\s+{module}\b", source, re.MULTILINE):
+                imported.add(module)
+
+        for module in _STDLIB:
+            if module in imported:
+                continue
+            # Ignore matches inside a docstring or comment - a helper's own prose
+            # mentioning "os.makedirs" is not a use.
+            body = re.sub(r'""".*?"""', "", source, flags=re.DOTALL)
+            body = "\n".join(line.split("#", 1)[0] for line in body.splitlines())
+            if re.search(rf"(?<![\w.]){module}\.", body):
+                raise SystemExit(
+                    f"{name} cell {index} uses {module}.* but no cell imports {module}"
+                )
 
 
 def main() -> int:
