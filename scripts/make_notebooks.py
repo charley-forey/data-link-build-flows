@@ -816,9 +816,20 @@ for path in files:
 # OVERWRITE, not merge. This CSV is the authoritative list of human decisions:
 # a row deleted from it means "that mapping was wrong", and merging would keep
 # the retracted mapping alive forever.
-REFERENCE = f"{LIB}/reference/project_crosswalk.csv"
+# TWO PATH NAMESPACES, and mixing them is a 400 from OneLake.
+#
+#   /lakehouse/default/Files/...  a POSIX mount. Works for open(), os.path.
+#   Files/...                     what spark.read resolves, via the ABFS driver
+#                                 against the attached default lakehouse.
+#
+# Handing spark.read the mount path makes it request
+# onelake.dfs.fabric.microsoft.com/<ws>/lakehouse/default/Files/... which is not
+# a real OneLake path. Existence is checked on the mount; the read uses the
+# relative form.
+REFERENCE_LOCAL = f"{LIB}/reference/project_crosswalk.csv"
+REFERENCE = "Files/reference/project_crosswalk.csv"
 
-if os.path.exists(REFERENCE):
+if os.path.exists(REFERENCE_LOCAL):
     crosswalk = (
         spark.read.option("header", True)
         .schema(
@@ -832,7 +843,7 @@ if os.path.exists(REFERENCE):
     ).saveAsTable("dl_bronze_reference_project_crosswalk")
     print(f"crosswalk overrides: {crosswalk.count()} row(s)")
 else:
-    print(f"no {REFERENCE} - crosswalk will rely on automatic matching only")
+    print(f"no {REFERENCE_LOCAL} - crosswalk will rely on automatic matching only")
 '''
             ),
             cell(
