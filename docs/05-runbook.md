@@ -141,6 +141,26 @@ from the standard ids. `dl_bronze_procore_budget_detail_columns` lists the
 actual keys for the pinned view — pin them into the COALESCE chains in
 `transformation/sql/silver/10_procore_silver.sql`.
 
+### The SQL endpoint says a table is empty and the notebook says it is not
+
+**Believe the notebook.** The lakehouse SQL endpoint syncs its metadata
+asynchronously, and immediately after a Spark write it will happily report
+`COUNT(*) = 0` for a table that has just been populated. Observed repeatedly on
+2026-08-18: a landing run reported "228 rows merged", and the SQL endpoint
+returned 0 for those same tables for several minutes afterwards - then returned
+the right answer with no intervention.
+
+This is the single most misleading thing about verifying a run, because a zero
+looks exactly like a real failure and invites you to "fix" working code.
+
+Order of trust, highest first:
+
+1. The notebook's own printed output.
+2. `Files/_diag/<name>.json`, written by every notebook.
+3. The SQL endpoint - only once it agrees with the above, or after a few minutes.
+
+If a count looks wrong, re-read the driver logs before changing anything.
+
 ### Pipeline activity fails with `TooManyRequestsForCapacity` (HTTP 430)
 
 Observed 2026-08-18 on the first real pipeline run: Bronze→Silver succeeded, and
