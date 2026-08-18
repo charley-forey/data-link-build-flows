@@ -43,6 +43,8 @@ leadership sees a portfolio rather than one job at a time.
 | `dim_CostCode` | project × cost code | `CostCodeKey` | Project-scoped: two projects can both have a "16-100" meaning different things, so the key is `project|code`. Key `0` = Unassigned. |
 | `dim_Vendor` | one vendor | `VendorKey` | Conformed across Procore and QuickBooks on a normalised name. `SourceSystem` records `procore` / `quickbooks` / `both`. Key `0` = Unassigned. |
 | `dim_Account` | one GL account | `AccountKey` | QuickBooks chart of accounts. `IsJobCostAccount` flags COGS and expense types for the GL tie-out. Key `0` = Unassigned. |
+| `dim_DealStage` | one deal stage | `DealStageKey` | **Carries the win probability.** A deal knows its stage; only the stage knows what that stage is worth, so weighted forecasting is a join. Stages referenced by deals but absent from the pipeline definition are unioned in at probability 0. `StageName` sorts by `DisplayOrder`. Key `0` = Unassigned. |
+| `dim_Owner` | one HubSpot owner | `OwnerKey` | Key `0` = Unassigned. |
 
 Every dimension carries a **key-0 "Unassigned" row**. A fact whose dimension
 value cannot be resolved joins to it rather than to nothing — a visible
@@ -57,17 +59,21 @@ value cannot be resolved joins to it rather than to nothing — a visible
 | `fct_ChangeOrder` | one change order | Cumulative roll-up happens in DAX, never in the grain. |
 | `fct_CostTransaction` | one cost line | Both sources, tagged by `SourceSystem`. **Never sum across it** — the same invoice is usually in both systems. |
 | `fct_Billing` | one billing | Procore payment applications, plus QuickBooks invoices as a check. |
+| `fct_Pipeline` | one open deal | Closed deals excluded — a pipeline is what might still happen. Won work belongs to Procore and the WIP schedule. |
+| `fct_Aging` | one open document | AR and AP in **one table**, discriminated by `Ledger`. Amounts are **positive in both arms**: the table states magnitude, and direction is applied only in the cash forecast. |
+| `fct_CashForecast` | week × flow | Committed cash only. Payments are negative here and only here. |
+| `fct_LabourHours` | one time entry | `LabourCost` uses the **cost** rate; `BillableValue` uses the billing rate. Conflating them makes every job look profitable. |
 
 ### Metadata
 
 | Table | Purpose |
 |---|---|
-| `meta_Measures` | Single-row anchor holding **every measure**. Hidden. |
+| `_Measures` | Single-row anchor holding **every measure**. Hidden. |
 | `meta_PipelineRun` | Drives `Pipeline Status`. |
 | `meta_DataQuality` | The Data Quality report page. |
 | `meta_UnmappedProjects` | The Controller's crosswalk to-do list. |
 
-`meta_Measures` is not optional bookkeeping. A measure cannot share a name with
+`_Measures` is not optional bookkeeping. A measure cannot share a name with
 a column on the same table, and the natural names collide immediately — `EAC`
 and `Backlog` are both columns on `fct_WIP`. Hanging measures off the fact table
 would force names like "EAC Total" in front of the CEO. One hidden anchor table
@@ -133,3 +139,41 @@ Validate after deploying by running a handful of measures through `execute_dax_q
 and tying the totals back to the same aggregation in SQL. A table that failed to
 load shows up there as blank, not as an error — so a passing DAX check is the
 only proof the model actually bound.
+
+
+---
+
+## Sort-by columns
+
+Six display columns order by a sort key rather than alphabetically. Without
+these, an ageing chart renders `1-30, 31-60, 61-90, Current` and a month axis
+runs `Apr, Aug, Dec`.
+
+| Column | Sorts by |
+|---|---|
+| `dim_Date[MonthName]`, `dim_Date[MonthShortName]` | `Month` |
+| `dim_Date[MonthYear]` | `MonthYearSort` |
+| `dim_Date[QuarterYear]` | `QuarterYearSort` |
+| `dim_DealStage[StageName]` | `DisplayOrder` |
+| `fct_Aging[AgingBucket]` | `AgingBucketSort` |
+
+**The pairing must be 1:1.** `meta_DataQuality[Severity]` was tried and
+reverted: `SeveritySort` ranks the row *outcome* (failing error 1, failing warn
+2, passed 3), so `error` maps to both 1 and 3. The engine accepts the ambiguity
+and then orders arbitrarily, which is worse than not sorting at all. That table
+sorts by `FailingRows` descending instead, which puts problems at the top.
+
+---
+
+## Direct Lake binds by directory name
+
+The partition `entityName` must be the **lowercase** OneLake directory name —
+`fct_aging`, not `fct_Aging`. The table-add API passes whatever name it is given
+straight through, so a PascalCase entity name binds to a path that does not
+exist and the refresh fails with *"cannot access the source Delta table"*.
+
+A type mismatch is worse: Direct Lake drops the table **silently**, and it
+appears in the report as blank rather than as an error. `dl_30_build_gold`
+writes the gold schema to `Files/_diag/gold_schema.json` so the model can be
+generated from what actually exists, and `powerbi/model-schema.json` is captured
+from the deployed model by `scripts/make_data_dictionary.py`.

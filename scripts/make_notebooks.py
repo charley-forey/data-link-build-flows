@@ -412,6 +412,171 @@ write_diag("extract_qbo", {
     )
 
 
+def nb_extract_hubspot() -> dict:
+    return notebook(
+        [
+            cell(
+                "# dl_03_extract_hubspot\n"
+                "\n"
+                "Pulls the objects in `Files/config/hubspot_objects.yml` into bronze,\n"
+                "plus the two reference sets that are not CRM objects.\n"
+                "\n"
+                "**Pipelines are the point.** Win probability lives on the STAGE\n"
+                "definition, never on the deal, so weighted forecasting is a join and\n"
+                "the pipelines endpoint is what makes it possible.\n"
+                "\n"
+                "The token is a private-app token and starts `pat-`. A developer API\n"
+                "key or a personal access key authenticates against a different surface\n"
+                "and 401s here - `check_token_shape` says so up front rather than\n"
+                "letting it fail one call later.",
+                "markdown",
+            ),
+            cell(
+                PRELUDE
+                + '''
+import yaml
+import requests
+
+import fabric_common as fc
+import hubspot_extract as hx
+import watermark as wm
+from ratelimit import RateLimitedSession
+
+CONFIG = f"{LIB}/config/hubspot_objects.yml"
+batch_id = fc.new_batch_id()
+
+with open(CONFIG, encoding="utf-8") as handle:
+    config = yaml.safe_load(handle)
+objects = config["objects"]
+reference = config.get("reference", [])
+print(f"batch {batch_id}: {len(objects)} objects, {len(reference)} reference sets")
+'''
+            ),
+            cell(
+                '''\
+token = fc.get_secret("HUBSPOT_PRIVATE_APP_TOKEN")
+
+# Shape check before the first call. The token is never printed - only whether
+# it looks like the right KIND of token.
+warning = hx.check_token_shape(token)
+if warning:
+    print(f"WARNING: {warning}")
+
+headers = hx.build_headers(token)
+
+# HubSpot sends Retry-After in MILLISECONDS, unlike Procore and QuickBooks.
+# Treating it as seconds turns a 200ms backoff into a 200 second one and the
+# run appears to hang.
+session = RateLimitedSession(requests.Session(), header_units="milliseconds")
+print("authenticated to HubSpot")
+'''
+            ),
+            cell(
+                '''\
+summary = []
+
+for entry in objects:
+    spec = hx.ObjectSpec(
+        name=entry["name"],
+        object_type=entry["object_type"],
+        bronze_table=entry["bronze_table"],
+        properties=tuple(entry.get("properties") or ()),
+        associations=tuple(entry.get("associations") or ()),
+    )
+
+    # Incremental via the search endpoint on hs_lastmodifieddate; full listing
+    # on the first run. search_since RAISES rather than truncating if a window
+    # exceeds HubSpot's 10,000-result cap, because a quiet truncation here is
+    # missing pipeline data that nothing downstream can detect.
+    since = wm.read_since(spark, spec.bronze_table, spec.name)
+    if since:
+        records = list(hx.search_since(session, headers, spec, since))
+        mode = "incremental"
+    else:
+        records = list(hx.iter_objects(session, headers, spec))
+        mode = "initial"
+
+    ingested_at = fc.utc_now()
+    rows = [
+        {
+            **hx.to_bronze_row(record, spec, ingested_at),
+            "_batch_id": batch_id,
+            "_row_hash": fc.row_hash(record),
+        }
+        for record in records
+    ]
+
+    if rows:
+        df = spark.createDataFrame(rows)
+        fc.merge_delta(spark, df, spec.bronze_table, ["_merge_key"])
+        high = hx.high_water(records)
+        if high:
+            wm.write_watermark(spark, spec.bronze_table, spec.name, high, batch_id)
+
+    fc.log_run(spark, batch_id, "extract_hubspot", spec.bronze_table, len(rows))
+    summary.append((spec.name, len(rows), mode))
+    print(f"  {spec.name:24s} {len(rows):7,d} rows  ({mode})")
+'''
+            ),
+            cell(
+                '''\
+import json
+
+# Pipelines and owners are not CRM objects and do not page like them, so they
+# use dedicated helpers. Each is stored WHOLE and flattened in silver, the same
+# treatment the QuickBooks reports get and for the same reason: the shape is
+# nested, and it is visible in SQL where someone can read it.
+by_name = {entry["name"]: entry["bronze_table"] for entry in reference}
+fetchers = {
+    "deal_pipelines": lambda: hx.fetch_pipelines(session, headers, "deals"),
+    "owners": lambda: hx.fetch_owners(session, headers),
+}
+
+for name, table in by_name.items():
+    fetch = fetchers.get(name)
+    if fetch is None:
+        print(f"  {name:24s} no fetcher - skipped")
+        continue
+
+    records = fetch()
+    ingested_at = fc.utc_now()
+    rows = [
+        {
+            "_key": str(record.get("id") or record.get("ownerId") or index),
+            "_project_id": None,
+            "_merge_key": f"{name}|{record.get('id') or index}",
+            "_source_endpoint": name,
+            "_ingested_at": ingested_at,
+            "payload": json.dumps(record, default=str),
+            "_batch_id": batch_id,
+            "_row_hash": fc.row_hash(record),
+        }
+        for index, record in enumerate(records)
+    ]
+
+    if rows:
+        fc.merge_delta(spark, spark.createDataFrame(rows), table, ["_merge_key"])
+
+    fc.log_run(spark, batch_id, "extract_hubspot_reference", table, len(rows))
+    summary.append((name, len(rows), "reference"))
+    print(f"  {name:24s} {len(rows):7,d} rows  (reference)")
+'''
+            ),
+            cell(
+                DIAG_HELPER
+                + '''
+write_diag("extract_hubspot", {
+    "batch_id": batch_id,
+    "api_version": hx.API_VERSION,
+    "objects": [{"name": n, "rows": c, "mode": m} for n, c, m in summary],
+})
+'''
+            ),
+        ],
+        "DL_Lakehouse",
+    )
+
+
 def nb_bronze_to_silver() -> dict:
     return notebook(
         [
@@ -868,6 +1033,7 @@ NOTEBOOKS = {
     "dl_05_land_to_bronze": nb_land_to_bronze,
     "dl_01_extract_procore": nb_extract_procore,
     "dl_02_extract_qbo": nb_extract_qbo,
+    "dl_03_extract_hubspot": nb_extract_hubspot,
     "dl_10_bronze_to_silver": nb_bronze_to_silver,
     "dl_30_build_gold": nb_build_gold,
     "dl_40_dq_checks": nb_dq_checks,

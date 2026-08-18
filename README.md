@@ -21,7 +21,7 @@ published as an 11-page Power BI report.**
 | Item | Name |
 |---|---|
 | Lakehouse | `DL_Lakehouse` |
-| Notebooks | `dl_00_bootstrap`, `dl_01_extract_procore`, `dl_02_extract_qbo`, `dl_05_land_to_bronze`, `dl_10_bronze_to_silver`, `dl_30_build_gold`, `dl_40_dq_checks` |
+| Notebooks | `dl_00_bootstrap`, `dl_01_extract_procore`, `dl_02_extract_qbo`, `dl_03_extract_hubspot`, `dl_05_land_to_bronze`, `dl_10_bronze_to_silver`, `dl_30_build_gold`, `dl_40_dq_checks` |
 | Pipelines | `DL_Ingest_Pipeline` (extraction), `DL_Master_Pipeline` (medallion + gate) |
 | Semantic model | `Data Link Financial Operating System` — Direct Lake, 15 tables, 68 measures |
 | Report | `Financial Operating System` — 11 pages, 110 visuals |
@@ -146,6 +146,7 @@ indistinguishable from "no data matched the filter".
 ```bash
 python scripts/deploy_files.py --apply    # library, SQL, configs -> Files/
 python scripts/deploy_report.py --apply   # PBIR -> the published report
+python scripts/make_data_dictionary.py    # live model -> schema + data dictionary
 ```
 
 Both dry-run without `--apply`. `deploy_files.py` is the command that makes
@@ -193,6 +194,29 @@ every identity holds.
 | **Procore** | connected — 374 rows across 24 endpoints, including the budget-view detail rows that carry EAC |
 | **QuickBooks** | connected — chart of accounts, customers and jobs, invoices, bills, purchases, the general ledger, open AR/AP and time activities |
 | **HubSpot** | connected — 1 deal pipeline, 7 stages with win probabilities. No deals in the portal yet, so the forecast is wired and reads zero |
+
+### How source data actually reaches bronze — read this
+
+There is **no Key Vault wired to the workspace**, so `get_secret()` raises
+inside a notebook and the three extractor notebooks
+(`dl_01_extract_procore`, `dl_02_extract_qbo`, `dl_03_extract_hubspot`) **cannot
+run in Fabric today**. None of them has ever completed a run there.
+
+That is a deliberate, documented state rather than a defect. Data reaches bronze
+through the **landing split**: extraction runs locally where the secret already
+lives, and a credential-free notebook loads the result.
+
+```bash
+python scripts/extract_local.py --source procore   # -> Files/_landing/<batch>/*.jsonl
+```
+
+then `dl_05_land_to_bronze` in Fabric. Everything downstream of bronze — silver,
+gold, the gate, the model, the report — is fully automated.
+
+**To close it:** provision a Key Vault, set `DATALINK_KEYVAULT_URL` on the
+workspace, and grant the workspace identity read on the secrets. The QuickBooks
+refresh token additionally needs write, because it rotates. See
+`docs/06-security-findings.md`.
 
 ---
 
@@ -253,6 +277,9 @@ scales to whatever the API reports.
 | `docs/00-client-summary.md` | What was built and what it replaces, in business terms |
 | `docs/01-architecture.md` | The platform in detail |
 | `docs/02-source-mapping.md` | Every model field → system → verified endpoint |
+| `docs/03-data-dictionary.md` | Every table, column and measure — **generated from the deployed model** |
+| `docs/06-security-findings.md` | What was found, what was done, what is still open |
+| `resources/*/endpoints-cheatsheet.md` | Per-source API facts verified against the tenant, not the public docs |
 | `docs/04-wip-methodology.md` | Every financial definition, the worked example, and the decisions that are easy to get wrong |
 | `docs/05-runbook.md` | Daily operation, failure modes, re-authorisation |
 | `powerbi/report-spec.md` | The 11 pages and why each visual is the form it is |

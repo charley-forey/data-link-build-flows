@@ -63,6 +63,32 @@ Files/_diag/<name>.json   -> what the run had done before it died
 
 ## Failure modes, most likely first
 
+### An extractor notebook fails immediately with a missing-secret RuntimeError
+
+**Expected, not a defect.** No Key Vault is wired to the workspace, so
+`DATALINK_KEYVAULT_URL` is unset, `get_secret()` finds no environment variable
+inside Spark, and it raises naming the fix. All three extractor notebooks
+(`dl_01_extract_procore`, `dl_02_extract_qbo`, `dl_03_extract_hubspot`) fail the
+same way. None has ever completed a run in Fabric.
+
+Use the landing split instead — extraction runs locally where the secret lives:
+
+```bash
+python scripts/extract_local.py --source procore
+python scripts/extract_local.py --source qbo
+python scripts/extract_local.py --source hubspot
+```
+
+then run `dl_05_land_to_bronze`, which holds no credentials. Everything after
+bronze is unaffected and fully automated.
+
+To fix properly: provision a Key Vault, set `DATALINK_KEYVAULT_URL` on the
+workspace, grant the workspace identity read on the secrets — and **write** on
+the QuickBooks refresh token, because it rotates. Do **not** work around it by
+putting the secret in a Spark property or a workspace variable; both are
+plaintext-readable by any workspace member.
+
+
 ### QuickBooks: `invalid_grant` on the token exchange
 
 **The single most likely production failure, and the least obvious.**

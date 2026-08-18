@@ -19,7 +19,95 @@
    "IsCurrentMonth",
    "IsCurrentYear"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "Date",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "Year",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "Month",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "Quarter",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "DayOfMonth",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "MonthStart",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "MonthEnd",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "MonthShortName",
+    "dataType": "string",
+    "sortByColumn": "Month"
+   },
+   {
+    "name": "MonthName",
+    "dataType": "string",
+    "sortByColumn": "Month"
+   },
+   {
+    "name": "MonthYear",
+    "dataType": "string",
+    "sortByColumn": "MonthYearSort"
+   },
+   {
+    "name": "MonthYearSort",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "QuarterYear",
+    "dataType": "string",
+    "sortByColumn": "QuarterYearSort"
+   },
+   {
+    "name": "QuarterYearSort",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "MonthOffset",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsPast",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsCurrentMonth",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsCurrentYear",
+    "dataType": "boolean",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "dim_Project": {
   "columns": [
@@ -52,7 +140,150 @@
    "IsInProcore",
    "IsInCrosswalk"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "ProjectKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProcoreProjectId",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "QboCustomerId",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "HubspotDealId",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectNumber",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectStatus",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectStage",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectType",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Office",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Region",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "City",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "StateCode",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsActive",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectStart",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectFinish",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "QboJobName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "CrosswalkMethod",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "CrosswalkConfidence",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "OriginalContract",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "ContractGrandTotal",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "RetainagePercent",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "ContractStart",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "ContractFinish",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "HasPrimeContract",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "HasExecutedContract",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsInProcore",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsInCrosswalk",
+    "dataType": "boolean",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "fct_WIP": {
   "columns": [
@@ -83,7 +314,140 @@
    "CostVariance",
    "CostVariancePct"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "ProjectKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "MonthStart",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "OriginalContract",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "ApprovedChangeOrders",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "PendingChangeOrders",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "RevisedContract",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "OriginalBudget",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "RevisedBudget",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CommittedCost",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CostToDate",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CostToDateQbo",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "EAC",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "BilledToDate",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "OverEacCostCodes",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "PercentCompleteRaw",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "PercentComplete",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "EarnedRevenue",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CostToComplete",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "GrossProfitAtCompletion",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "GrossProfitPctAtCompletion",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "EarnedGrossProfit",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "OverBilling",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "UnderBilling",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "Backlog",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CostVariance",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CostVariancePct",
+    "dataType": "double",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "fct_BudgetLine": {
   "columns": [
@@ -103,7 +467,85 @@
    "ProjectedOverUnder",
    "IsOverEac"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "ProjectKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "CostCodeKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "BudgetLineKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "CostCode",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Category",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "OriginalBudget",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "ApprovedBudgetChanges",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "RevisedBudget",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CommittedCost",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "DirectCost",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "JobToDateCost",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "EstimatedCostAtCompletion",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "ForecastToComplete",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectedOverUnder",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsOverEac",
+    "dataType": "boolean",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "fct_ChangeOrder": {
   "columns": [
@@ -122,7 +564,80 @@
    "HasOutOfRangeDate",
    "IsApproved"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "ProjectKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ChangeOrderKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ContractId",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ChangeOrderScope",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ChangeOrderNumber",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Title",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Status",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Amount",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CreatedDate",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "ApprovedDate",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "EffectiveDate",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "MonthStart",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "HasOutOfRangeDate",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsApproved",
+    "dataType": "boolean",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "_Measures": {
   "columns": [
@@ -197,6 +712,423 @@
    "Utilisation",
    "Labour Margin",
    "Unattributed Hours"
+  ],
+  "column_detail": [
+   {
+    "name": "Anchor",
+    "dataType": "int64",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": [
+   {
+    "name": "Original Contract",
+    "description": "Prime contract value before any change orders.",
+    "formatString": "$#,0",
+    "displayFolder": "01 Contract & Change"
+   },
+   {
+    "name": "Approved Change Orders",
+    "description": "Approved prime change orders, CUMULATIVE. Rolling these up per-month rather than cumulatively is the defect that understated portfolio contract value by 16 percent on a comparable engagement.",
+    "formatString": "$#,0",
+    "displayFolder": "01 Contract & Change"
+   },
+   {
+    "name": "Pending Change Orders",
+    "description": "Submitted but not approved. Excluded from Revised Contract - unapproved work is exposure, not revenue.",
+    "formatString": "$#,0",
+    "displayFolder": "01 Contract & Change"
+   },
+   {
+    "name": "Revised Contract",
+    "description": "Original contract plus approved change orders.",
+    "formatString": "$#,0",
+    "displayFolder": "01 Contract & Change"
+   },
+   {
+    "name": "Contract Growth %",
+    "description": "",
+    "formatString": "0.0%",
+    "displayFolder": "01 Contract & Change"
+   },
+   {
+    "name": "Original Budget",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "02 Budget & Cost"
+   },
+   {
+    "name": "Revised Budget",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "02 Budget & Cost"
+   },
+   {
+    "name": "Committed Cost",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "02 Budget & Cost"
+   },
+   {
+    "name": "Cost to Date",
+    "description": "Job-to-date cost per Procore. The reporting number.",
+    "formatString": "$#,0",
+    "displayFolder": "02 Budget & Cost"
+   },
+   {
+    "name": "Estimated Cost at Completion",
+    "description": "Floors at revised budget where the Procore budget view reports zero, so an unforecast job does not appear complete having spent nothing.",
+    "formatString": "$#,0",
+    "displayFolder": "02 Budget & Cost"
+   },
+   {
+    "name": "Cost to Complete",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "02 Budget & Cost"
+   },
+   {
+    "name": "Percent Complete",
+    "description": "Totals divided, NOT an average of per-project percentages - averaging weights a small job the same as a large one.",
+    "formatString": "0.0%",
+    "displayFolder": "02 Budget & Cost"
+   },
+   {
+    "name": "Earned Revenue",
+    "description": "Cost-to-cost percentage of completion. SUMX over projects because each project earns at its OWN percent complete - multiplying portfolio contract by portfolio percent complete is a different and wrong number.",
+    "formatString": "$#,0",
+    "displayFolder": "03 Revenue & Margin"
+   },
+   {
+    "name": "Gross Profit at Completion",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "03 Revenue & Margin"
+   },
+   {
+    "name": "GP % at Completion",
+    "description": "",
+    "formatString": "0.0%",
+    "displayFolder": "03 Revenue & Margin"
+   },
+   {
+    "name": "Earned Gross Profit",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "03 Revenue & Margin"
+   },
+   {
+    "name": "Earned GP %",
+    "description": "",
+    "formatString": "0.0%",
+    "displayFolder": "03 Revenue & Margin"
+   },
+   {
+    "name": "Fade Gain",
+    "description": "Fade (negative) or gain (positive) in forecast margin against the prior month. A job whose margin erodes quietly month over month is the one that hurts.",
+    "formatString": "0.00%",
+    "displayFolder": "03 Revenue & Margin"
+   },
+   {
+    "name": "Billed to Date",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "04 Billing & Backlog"
+   },
+   {
+    "name": "Over Billing",
+    "description": "Billings in excess of costs - a LIABILITY. Kept separate from under-billing rather than netted, because netting loses the balance-sheet distinction.",
+    "formatString": "$#,0",
+    "displayFolder": "04 Billing & Backlog"
+   },
+   {
+    "name": "Under Billing",
+    "description": "Costs in excess of billings - an ASSET, and usually a cash-flow problem.",
+    "formatString": "$#,0",
+    "displayFolder": "04 Billing & Backlog"
+   },
+   {
+    "name": "Net Over Under Billing",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "04 Billing & Backlog"
+   },
+   {
+    "name": "Backlog Value",
+    "description": "Revised contract not yet earned. What the company still has to build.",
+    "formatString": "$#,0",
+    "displayFolder": "04 Billing & Backlog"
+   },
+   {
+    "name": "Backlog Months",
+    "description": "Months of work remaining at the trailing three-month burn rate. Guarded against a zero burn, which would otherwise render as a blank tile that reads like missing data.",
+    "formatString": "0.0",
+    "displayFolder": "04 Billing & Backlog"
+   },
+   {
+    "name": "Cost to Date (QuickBooks)",
+    "description": "Job cost per QuickBooks. Loaded alongside Procore, never blended with it.",
+    "formatString": "$#,0",
+    "displayFolder": "05 Reconciliation"
+   },
+   {
+    "name": "Cost Variance",
+    "description": "Procore minus QuickBooks. A non-zero value is a FINDING, not necessarily a bug: an AP invoice not yet entered, a cost coded to the wrong job, an accrual Procore does not know about.",
+    "formatString": "$#,0",
+    "displayFolder": "05 Reconciliation"
+   },
+   {
+    "name": "Cost Variance %",
+    "description": "",
+    "formatString": "0.0%",
+    "displayFolder": "05 Reconciliation"
+   },
+   {
+    "name": "Unmapped Contract Value",
+    "description": "Contract value that cannot be reconciled to QuickBooks yet. The number that motivates finishing the crosswalk.",
+    "formatString": "$#,0",
+    "displayFolder": "05 Reconciliation"
+   },
+   {
+    "name": "Cost Codes Over EAC",
+    "description": "",
+    "formatString": "#,0",
+    "displayFolder": "06 Risk & Exceptions"
+   },
+   {
+    "name": "Project Risk Label",
+    "description": "Text label beside every RAG indicator. Red and green are separated by only dE 7.1 under deuteranopia, below the dE 8 legibility floor, so no status in this report is conveyed by colour alone.",
+    "formatString": "",
+    "displayFolder": "06 Risk & Exceptions"
+   },
+   {
+    "name": "Last Successful Run",
+    "description": "",
+    "formatString": "yyyy-mm-dd hh:nn",
+    "displayFolder": "07 Pipeline liveness"
+   },
+   {
+    "name": "Hours Since Last Run",
+    "description": "",
+    "formatString": "0",
+    "displayFolder": "07 Pipeline liveness"
+   },
+   {
+    "name": "Pipeline Status",
+    "description": "The spreadsheet this replaces cannot say when it was last correct. A dashboard silently showing three-week-old numbers is worse than one that is obviously broken.",
+    "formatString": "",
+    "displayFolder": "07 Pipeline liveness"
+   },
+   {
+    "name": "Blocking DQ Failures",
+    "description": "Expectations that stopped the pipeline. COALESCE to zero on purpose: a blank KPI tile reads as missing data, when the answer is none.",
+    "formatString": "#,0",
+    "displayFolder": "07 Pipeline liveness"
+   },
+   {
+    "name": "DQ Warnings",
+    "description": "Findings to review with the Controller - true of the real data, not necessarily defects.",
+    "formatString": "#,0",
+    "displayFolder": "07 Pipeline liveness"
+   },
+   {
+    "name": "Projects Unmapped",
+    "description": "",
+    "formatString": "#,0",
+    "displayFolder": "05 Reconciliation"
+   },
+   {
+    "name": "Projects at Risk",
+    "description": "",
+    "formatString": "#,0",
+    "displayFolder": "06 Risk & Exceptions"
+   },
+   {
+    "name": "Projects Over EAC",
+    "description": "Cost has passed the forecast. Revenue recognition caps at 100 percent but the over-run stays visible here.",
+    "formatString": "#,0",
+    "displayFolder": "06 Risk & Exceptions"
+   },
+   {
+    "name": "Pipeline Value",
+    "description": "Total open pipeline, unweighted. The headline number, and the one that flatters - it assumes every deal closes.",
+    "formatString": "$#,0",
+    "displayFolder": "08 Pipeline & Forecast"
+   },
+   {
+    "name": "Weighted Pipeline",
+    "description": "Pipeline weighted by win probability. The number to plan against. Probability comes from the STAGE, not the deal, except where the portal set a deal-level override.",
+    "formatString": "$#,0",
+    "displayFolder": "08 Pipeline & Forecast"
+   },
+   {
+    "name": "Open Deals",
+    "description": "",
+    "formatString": "#,0",
+    "displayFolder": "08 Pipeline & Forecast"
+   },
+   {
+    "name": "Average Deal Size",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "08 Pipeline & Forecast"
+   },
+   {
+    "name": "Pipeline Confidence",
+    "description": "Weighted pipeline as a share of the unweighted total. A low ratio means the pipeline is full of early-stage work - a very different position from the same headline number sitting at contract-sent.",
+    "formatString": "0.0%",
+    "displayFolder": "08 Pipeline & Forecast"
+   },
+   {
+    "name": "Stale Deals",
+    "description": "Deals whose close date has passed but are still open. These quietly inflate a forecast: the value sits in a month that has been and gone.",
+    "formatString": "#,0",
+    "displayFolder": "08 Pipeline & Forecast"
+   },
+   {
+    "name": "Stale Pipeline Value",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "08 Pipeline & Forecast"
+   },
+   {
+    "name": "Average Days Open",
+    "description": "",
+    "formatString": "0",
+    "displayFolder": "08 Pipeline & Forecast"
+   },
+   {
+    "name": "Total Forward Work",
+    "description": "Backlog plus weighted pipeline - work in hand plus work we might win. The two are NOT the same quality of number and are shown separately as well; this is the planning horizon, not a revenue forecast.",
+    "formatString": "$#,0",
+    "displayFolder": "08 Pipeline & Forecast"
+   },
+   {
+    "name": "AR Outstanding",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "09 Receivables"
+   },
+   {
+    "name": "AR Overdue",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "09 Receivables"
+   },
+   {
+    "name": "AR Over 90 Days",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "09 Receivables"
+   },
+   {
+    "name": "AR Overdue %",
+    "description": "",
+    "formatString": "0.0%",
+    "displayFolder": "09 Receivables"
+   },
+   {
+    "name": "AR Weighted Average Days",
+    "description": "Weighted average age of the receivables book, in days. Weighted by value, because one large old invoice matters more than several small fresh ones - a plain average of ages hides exactly the invoice you need to chase.",
+    "formatString": "0",
+    "displayFolder": "09 Receivables"
+   },
+   {
+    "name": "Days Sales Outstanding",
+    "description": "Days sales outstanding, trailing 90 days. Guarded against a zero-revenue window, which would otherwise render as a blank tile that reads like missing data.",
+    "formatString": "0",
+    "displayFolder": "09 Receivables"
+   },
+   {
+    "name": "Invoices Outstanding",
+    "description": "",
+    "formatString": "#,0",
+    "displayFolder": "09 Receivables"
+   },
+   {
+    "name": "AP Outstanding",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "10 Payables & Cash"
+   },
+   {
+    "name": "AP Overdue",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "10 Payables & Cash"
+   },
+   {
+    "name": "Net Working Capital",
+    "description": "Receivables less payables. Both sides are positive in fct_Aging, so this subtraction is the only place the relationship between them is expressed.",
+    "formatString": "$#,0",
+    "displayFolder": "10 Payables & Cash"
+   },
+   {
+    "name": "Expected Collections",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "10 Payables & Cash"
+   },
+   {
+    "name": "Expected Payments",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "10 Payables & Cash"
+   },
+   {
+    "name": "Net Cash Movement",
+    "description": "Collections less payments over the selected weeks. Already signed in fct_CashForecast, so this is a plain sum.",
+    "formatString": "$#,0",
+    "displayFolder": "10 Payables & Cash"
+   },
+   {
+    "name": "Cumulative Cash Position",
+    "description": "Running cash position across the forecast window. This is the shape the CEO actually reads - the trough matters more than the total.",
+    "formatString": "$#,0",
+    "displayFolder": "10 Payables & Cash"
+   },
+   {
+    "name": "Cash Forecast Basis",
+    "description": "Committed cash movement only. Does NOT include work in backlog that has not been billed, because turning backlog into cash needs a billing schedule and collection assumptions the Controller has not given us.",
+    "formatString": "",
+    "displayFolder": "10 Payables & Cash"
+   },
+   {
+    "name": "Labour Hours",
+    "description": "",
+    "formatString": "#,0.0",
+    "displayFolder": "11 Capacity"
+   },
+   {
+    "name": "Labour Cost",
+    "description": "",
+    "formatString": "$#,0",
+    "displayFolder": "11 Capacity"
+   },
+   {
+    "name": "Billable Hours",
+    "description": "",
+    "formatString": "#,0.0",
+    "displayFolder": "11 Capacity"
+   },
+   {
+    "name": "Utilisation",
+    "description": "The core capacity number: what share of paid hours can be charged on.",
+    "formatString": "0.0%",
+    "displayFolder": "11 Capacity"
+   },
+   {
+    "name": "Labour Margin",
+    "description": "Value of billable hours at the client rate, less what those hours cost. Uses BillableValue and LabourCost, computed from the billing rate and the COST rate respectively - conflating the two is the classic way to make every job look profitable.",
+    "formatString": "$#,0",
+    "displayFolder": "11 Capacity"
+   },
+   {
+    "name": "Unattributed Hours",
+    "description": "",
+    "formatString": "#,0.0",
+    "displayFolder": "11 Capacity"
+   }
   ]
  },
  "meta_PipelineRun": {
@@ -207,7 +1139,35 @@
    "RowsWritten",
    "Succeeded"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "BatchId",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "RunAt",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "StepCount",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "RowsWritten",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "Succeeded",
+    "dataType": "boolean",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "meta_DataQuality": {
   "columns": [
@@ -221,7 +1181,55 @@
    "SeveritySort",
    "StatusLabel"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "Expectation",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "TableName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Severity",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "FailingRows",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "Passed",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "Description",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "CheckedAt",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "SeveritySort",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "StatusLabel",
+    "dataType": "string",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "meta_UnmappedProjects": {
   "columns": [
@@ -236,7 +1244,60 @@
    "ProposedQboJobName",
    "Reason"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "ProjectKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectNumber",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectStatus",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "OriginalContract",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CrosswalkMethod",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "CrosswalkConfidence",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProposedQboCustomerId",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProposedQboJobName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Reason",
+    "dataType": "string",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "dim_DealStage": {
   "columns": [
@@ -248,7 +1309,45 @@
    "IsClosedStage",
    "StageOutcome"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "DealStageKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "StageName",
+    "dataType": "string",
+    "sortByColumn": "DisplayOrder"
+   },
+   {
+    "name": "PipelineName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "DisplayOrder",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "WinProbability",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsClosedStage",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "StageOutcome",
+    "dataType": "string",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "dim_Owner": {
   "columns": [
@@ -256,7 +1355,25 @@
    "OwnerName",
    "OwnerEmail"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "OwnerKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "OwnerName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "OwnerEmail",
+    "dataType": "string",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "fct_Pipeline": {
   "columns": [
@@ -275,7 +1392,80 @@
    "DaysOpen",
    "IsPastCloseDate"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "DealKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "DealStageKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "OwnerKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "DealName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "DealType",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Amount",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "WinProbability",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "WeightedAmount",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "CloseDate",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "CreateDate",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "MonthStart",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "HasOutOfRangeDate",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "DaysOpen",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsPastCloseDate",
+    "dataType": "boolean",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "fct_Aging": {
   "columns": [
@@ -296,7 +1486,90 @@
    "IsOverdue",
    "MonthStart"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "Ledger",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "AgingKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "DocumentId",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "DocNumber",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "CounterpartyId",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "CounterpartyName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "DocumentDate",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "DueDate",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "TotalAmount",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "OpenBalance",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "DaysPastDue",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "AgingBucket",
+    "dataType": "string",
+    "sortByColumn": "AgingBucketSort"
+   },
+   {
+    "name": "AgingBucketSort",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsOverdue",
+    "dataType": "boolean",
+    "sortByColumn": null
+   },
+   {
+    "name": "MonthStart",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "fct_CashForecast": {
   "columns": [
@@ -307,7 +1580,40 @@
    "DocumentCount",
    "IsPast"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "WeekStart",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "Flow",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "Amount",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "OverdueAmount",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "DocumentCount",
+    "dataType": "int64",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsPast",
+    "dataType": "boolean",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  },
  "fct_LabourHours": {
   "columns": [
@@ -324,6 +1630,69 @@
    "BillableValue",
    "IsBillable"
   ],
-  "measures": []
+  "measures": [],
+  "column_detail": [
+   {
+    "name": "LabourKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ProjectKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "WorkerKey",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "WorkerName",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "WorkerType",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "BillableStatus",
+    "dataType": "string",
+    "sortByColumn": null
+   },
+   {
+    "name": "ActivityDate",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "MonthStart",
+    "dataType": "dateTime",
+    "sortByColumn": null
+   },
+   {
+    "name": "Hours",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "LabourCost",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "BillableValue",
+    "dataType": "double",
+    "sortByColumn": null
+   },
+   {
+    "name": "IsBillable",
+    "dataType": "boolean",
+    "sortByColumn": null
+   }
+  ],
+  "measure_detail": []
  }
 }

@@ -1,10 +1,17 @@
 # Report spec — Financial Operating System
 
-Seven pages for phase 1. Every page carries the same two synced slicers
-(**Project**, **Month**) and a footer naming the reporting period and the
-`Pipeline Status` measure.
+**Eleven pages, built and published.** Generated from `scripts/make_report.py`,
+not placed by hand — this file is the specification, that script is the
+implementation, and the two are meant to stay in step.
 
-Canvas 1280×720, `FitToPage`. Every visual carries `altText`.
+Every page carries the same two slicers (**Project**, **Month**). They are
+**not synced across pages**: PBIR's sync-group schema could not be verified
+against a working report, and inventing one produces slicers that look synced
+and are not. Each page filters correctly on its own; turning on cross-page sync
+is one setting in Desktop.
+
+Canvas 1280×720, `FitToPage`. Every visual carries `altText` — the generator
+refuses to emit one without it.
 
 ---
 
@@ -188,7 +195,7 @@ finance report.
 
 ## 11 · Capacity
 
-Thinnest of the phase 2 pages, and honest about it — it rests on QuickBooks time
+Thinnest of the pages, and honest about it — it rests on QuickBooks time
 entries only. Procore timecards would deepen it considerably.
 
 | Visual | Form | Notes |
@@ -202,8 +209,41 @@ entries only. Procore timecards would deepen it considerably.
 
 ## Build note
 
-The Fabric MCP server has no report-creation tool. The semantic model is built
-programmatically; this report is authored as a PBIP project in `powerbi/` and
-published from Power BI Desktop or the Power BI REST API. Everything it binds to
-is created from code, so the report is the only hand-placed artifact — and
-`theme.json` carries the palette so the hand-placement cannot drift off-system.
+The Fabric MCP server has no report-creation tool, so this is the one item
+deployed over raw REST:
+
+```bash
+python scripts/make_report.py         # page spec -> PBIR
+python scripts/deploy_report.py --apply
+```
+
+`make_report.py` validates every projection against `powerbi/model-schema.json`
+and **refuses to write a report that binds to something the model does not
+have**. That check is the reason the generator exists: a mistyped measure name
+does not fail at publish time — Power BI renders the visual *empty*, which is
+indistinguishable from "no data matched the filter".
+
+It also rejects a visual that **sorts by a field it does not display**. Power BI
+ignores that sort silently and falls back to alphabetical, which is how the
+ageing chart first shipped reading `1-30, 31-60, 61-90, Current`. The fix is a
+`sortByColumn` on the display column in the model, and that pairing must be 1:1
+— `meta_DataQuality[Severity]` was tried and reverted because `SeveritySort`
+ranks the row *outcome*, so one severity maps to two sort values.
+
+### Known gaps
+
+- **The custom theme does not bind through the REST publish path.** The report renders on the Fabric base theme, which is itself accessibility-tuned. `powerbi/theme.json` applies when the PBIP is opened in Desktop. Cosmetic only — no status is encoded in colour alone anywhere, so the non-negotiables above hold regardless.
+- Slicers are not synced across pages, as described at the top.
+
+### Verifying a change
+
+Publishing proves the service *stored* your JSON. It says nothing about whether
+the visuals bind. Render the published report and read it back:
+
+```
+POST /v1.0/myorg/groups/{ws}/reports/{id}/ExportTo   {"format": "PDF"}
+```
+
+That is what caught the ageing sort, a KPI row overlapping the slicers, and a
+truncated risk-label column — none of which any amount of schema validation
+would have found.

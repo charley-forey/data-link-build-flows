@@ -66,21 +66,23 @@ and self-healing compared with incremental merge logic nobody can debug later.
 **The `sv_*` source-view layer sits between silver and gold.** Every gold file
 reads `sv_*` and nothing else. That makes gold portable across Spark and DuckDB
 (so the real SQL is tested offline), and it makes changing where silver lives a
-one-file change. A source that does not exist yet — HubSpot — is declared as an
-empty view **with real types**, so downstream compiles and tests today and goes
-live by changing that one view.
+one-file change. It also let HubSpot be declared as an empty view **with real
+types** long before the data existed, so everything downstream compiled and was
+tested against it — and going live was a change to that one view, exactly as
+intended.
 
 ## Where correctness is enforced
 
 | Layer | Mechanism |
 |---|---|
-| Offline | `tests/test_gold.py` runs the real gold SQL in DuckDB: 66 assertions on the WIP identities, plus 26 data-quality expectations executed for real |
+| Offline | `scripts/run_tests.py` runs the real silver and gold SQL in DuckDB: 203 assertions covering the WIP identities and the phase 2 facts, plus 45 data-quality expectations executed for real |
 | Generation | `scripts/make_notebooks.py` compiles every notebook cell before writing it |
 | Ingestion | MERGE keys make re-runs idempotent; run twice, row counts must not move |
 | Silver | TRIM everything, floor sentinel dates, reject loudly to `dl_dq_rejects` |
 | Gold | `dim_Project` is the union of the crosswalk and every observed project id — referential integrity holds by construction |
-| Publish | 34 expectations; blocking failures raise and stop the pipeline |
+| Publish | 53 expectations (35 blocking, 18 warning); blocking failures raise and stop the pipeline |
 | Model | Liveness measures state on the report's own face when it was last correct |
+| Report | `scripts/make_report.py` validates every projection against the live model schema, and rejects a visual that sorts by a field it does not display — Power BI ignores that sort silently |
 
 ## What is deliberately not built
 

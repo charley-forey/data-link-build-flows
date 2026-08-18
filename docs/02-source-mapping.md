@@ -50,7 +50,7 @@ HubSpot (2,168 endpoints).
 |---|---|
 | RFIs, submittals, daily logs, punch | Operational, not financial. Phase 1 is WIP and project P&L. |
 | Drawings, photos, documents | No reporting value; large payloads against a 600/hour quota. |
-| Timecards / manpower | Phase 2, for capacity planning. |
+| Timecards / manpower | Not pulled. Capacity currently rests on QuickBooks `TimeActivity`; Procore timecards would deepen it considerably. |
 | `/budget_line_items` (v1.0, v1.1) | POST only — there is no GET. The read path is the budget view. |
 
 ---
@@ -74,7 +74,7 @@ the WIP schedule would not tie to the financial statements.
 
 ---
 
-## HubSpot — pipeline (phase 2)
+## HubSpot — pipeline
 
 | Model field | Object | Source property |
 |---|---|---|
@@ -113,9 +113,9 @@ is most of them.
 
 ## Manual inputs
 
-Nothing in phase 1 requires manual entry beyond the crosswalk overrides
+Nothing built so far requires manual entry beyond the crosswalk overrides
 (`Files/reference/project_crosswalk.csv`).
 
-Phase 2 will need annual revenue and margin targets for variance reporting, and
-crew capacity by month for capacity planning. Both land as `man_*` tables through
-the same reference-file path.
+Two things would need it if asked for later: annual revenue and margin targets
+for variance reporting, and crew capacity by month. Both would land as `man_*`
+tables through the same reference-file path.
