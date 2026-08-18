@@ -38,6 +38,7 @@ import argparse
 import base64
 import http.server
 import json
+import os
 import pathlib
 import secrets
 import socketserver
@@ -55,8 +56,10 @@ from fabric_common import get_secret, load_dotenv_upwards  # noqa: E402
 
 AUTH_URL = "https://appcenter.intuit.com/connect/oauth2"
 TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
-REDIRECT_URI = "http://localhost:8080/callback"
-PORT = 8080
+# Intuit matches the redirect URI EXACTLY against what is registered on the app,
+# and rejects anything else before showing a login prompt. Overridable because
+# an app is often already registered against the OAuth Playground instead.
+DEFAULT_REDIRECT_URI = "http://localhost:8080/callback"
 
 # com.intuit.quickbooks.accounting is the only scope this platform needs. Asking
 # for payments or payroll as well would widen what a leaked token can reach for
@@ -89,9 +92,9 @@ class CallbackHandler(http.server.BaseHTTPRequestHandler):
         """Silence the default request logging - it would print the auth code."""
 
 
-def wait_for_callback(timeout: int = 300) -> dict[str, str]:
+def wait_for_callback(timeout: int = 300, port: int = 8080) -> dict[str, str]:
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("localhost", PORT), CallbackHandler) as httpd:
+    with socketserver.TCPServer(("localhost", port), CallbackHandler) as httpd:
         thread = threading.Thread(target=httpd.serve_forever, daemon=True)
         thread.start()
         deadline = threading.Event()
@@ -103,10 +106,10 @@ def wait_for_callback(timeout: int = 300) -> dict[str, str]:
     return _result
 
 
-def exchange(code: str, client_id: str, client_secret: str) -> dict:
+def exchange(code: str, client_id: str, client_secret: str, redirect_uri: str) -> dict:
     basic = base64.b64encode(f"{client_id}:{client_secret}".encode("utf-8")).decode("ascii")
     body = urllib.parse.urlencode(
-        {"grant_type": "authorization_code", "code": code, "redirect_uri": REDIRECT_URI}
+        {"grant_type": "authorization_code", "code": code, "redirect_uri": redirect_uri}
     ).encode("utf-8")
     request = urllib.request.Request(
         TOKEN_URL,
@@ -153,7 +156,25 @@ def main() -> int:
         help="authorise the production company rather than a sandbox",
     )
     parser.add_argument("--no-write", action="store_true", help="print only, do not touch .env")
+    parser.add_argument(
+        "--redirect-uri",
+        default=os.environ.get("QUICKBOOKS_REDIRECT_URI", DEFAULT_REDIRECT_URI),
+        help="must match a Redirect URI registered on the Intuit app, exactly",
+    )
+    parser.add_argument(
+        "--code",
+        help=(
+            "paste an authorization code obtained elsewhere (e.g. Intuit's OAuth "
+            "Playground) instead of running the local browser flow"
+        ),
+    )
+    parser.add_argument("--realm-id", help="realm id, when supplying --code")
     args = parser.parse_args()
+
+    redirect_uri = args.redirect_uri
+    parsed_port = urllib.parse.urlparse(redirect_uri).port
+    port = parsed_port or 8080
+    is_local = urllib.parse.urlparse(redirect_uri).hostname in ("localhost", "127.0.0.1")
     environment = "production" if args.production else "sandbox"
 
     env_path = load_dotenv_upwards(str(ROOT))
@@ -172,29 +193,54 @@ def main() -> int:
             "client_id": client_id,
             "response_type": "code",
             "scope": SCOPE,
-            "redirect_uri": REDIRECT_URI,
+            "redirect_uri": redirect_uri,
             "state": state,
         }
     )
 
     print(f"Authorising QuickBooks ({environment}).")
-    print(f"Redirect URI must be registered on the Intuit app: {REDIRECT_URI}\n")
-    print("Opening your browser. If nothing happens, visit:\n")
-    print(f"  {url}\n")
-    webbrowser.open(url)
+    print(f"Redirect URI (must be registered on the Intuit app): {redirect_uri}\n")
 
-    result = wait_for_callback()
-    if "code" not in result:
-        print(f"error: no authorization code received ({result or 'timed out'})", file=sys.stderr)
-        return 1
-    # State is checked because a mismatch means the response did not come from
-    # the request we made.
-    if result.get("state") != state:
-        print("error: state mismatch - discarding this response", file=sys.stderr)
-        return 1
+    if args.code:
+        # Manual path: the code came from Intuit's OAuth Playground or another
+        # already-registered redirect. The exchange still has to send the SAME
+        # redirect_uri the code was issued against, or Intuit rejects it.
+        if not args.realm_id:
+            print("error: --code also needs --realm-id", file=sys.stderr)
+            return 1
+        code, realm_id = args.code, args.realm_id
+    else:
+        if not is_local:
+            print(
+                f"error: {redirect_uri} is not a localhost address, so this script "
+                "cannot receive the redirect.\n"
+                "       Either register http://localhost:8080/callback on the Intuit "
+                "app, or obtain the code\n"
+                "       elsewhere and pass --code <code> --realm-id <id> "
+                "--redirect-uri <the same uri>.",
+                file=sys.stderr,
+            )
+            return 1
 
-    realm_id = result.get("realmId", "")
-    tokens = exchange(result["code"], client_id, client_secret)
+        print("Opening your browser. If nothing happens, visit:\n")
+        print(f"  {url}\n")
+        webbrowser.open(url)
+
+        result = wait_for_callback(port=port)
+        if "code" not in result:
+            print(
+                f"error: no authorization code received ({result or 'timed out'})",
+                file=sys.stderr,
+            )
+            return 1
+        # State is checked because a mismatch means the response did not come
+        # from the request we made.
+        if result.get("state") != state:
+            print("error: state mismatch - discarding this response", file=sys.stderr)
+            return 1
+        code, realm_id = result["code"], result.get("realmId", "")
+
+    tokens = exchange(code, client_id, client_secret, redirect_uri)
 
     refresh_token = tokens["refresh_token"]
     refresh_days = int(tokens.get("x_refresh_token_expires_in", 0)) / 86400
