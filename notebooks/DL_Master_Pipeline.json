@@ -1,0 +1,86 @@
+{
+ "pipeline_content_json": {
+  "properties": {
+   "activities": [
+    {
+     "name": "Bronze to Silver",
+     "type": "TridentNotebook",
+     "dependsOn": [],
+     "policy": {
+      "timeout": "0.02:00:00",
+      "retry": 1,
+      "retryIntervalInSeconds": 120,
+      "secureOutput": false,
+      "secureInput": false
+     },
+     "typeProperties": {
+      "notebookId": "e89768d5-c16f-438d-badb-a9d22113c88c",
+      "workspaceId": "2ac993c2-c72f-48d1-9933-93ac189f25bf",
+      "parameters": {}
+     }
+    },
+    {
+     "name": "Build Gold",
+     "type": "TridentNotebook",
+     "dependsOn": [
+      {
+       "activity": "Bronze to Silver",
+       "dependencyConditions": [
+        "Succeeded"
+       ]
+      }
+     ],
+     "policy": {
+      "timeout": "0.02:00:00",
+      "retry": 1,
+      "retryIntervalInSeconds": 120,
+      "secureOutput": false,
+      "secureInput": false
+     },
+     "typeProperties": {
+      "notebookId": "47d8239e-05aa-4452-89f4-d7a351af8803",
+      "workspaceId": "2ac993c2-c72f-48d1-9933-93ac189f25bf",
+      "parameters": {}
+     }
+    },
+    {
+     "name": "Data Quality Gate",
+     "type": "TridentNotebook",
+     "dependsOn": [
+      {
+       "activity": "Build Gold",
+       "dependencyConditions": [
+        "Succeeded"
+       ]
+      }
+     ],
+     "policy": {
+      "timeout": "0.01:00:00",
+      "retry": 0,
+      "retryIntervalInSeconds": 30,
+      "secureOutput": false,
+      "secureInput": false
+     },
+     "typeProperties": {
+      "notebookId": "5437dbbe-de9a-409c-b00d-033ec1dd389a",
+      "workspaceId": "2ac993c2-c72f-48d1-9933-93ac189f25bf",
+      "parameters": {}
+     }
+    }
+   ],
+   "annotations": []
+  }
+ },
+ "platform": {
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+   "type": "DataPipeline",
+   "displayName": "DL_Master_Pipeline",
+   "description": "Medallion: bronze to silver, build gold, then the data-quality gate. Dependencies are Succeeded, not Completed."
+  },
+  "config": {
+   "version": "2.0",
+   "logicalId": "00000000-0000-0000-0000-000000000000"
+  }
+ }
+}

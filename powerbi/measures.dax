@@ -1,0 +1,238 @@
+// Data Link Financial Operating System - measure library
+//
+// Model:      powerbi/semantic-model.md
+// Method:     docs/04-wip-methodology.md
+// Locked by:  tests/test_gold.py (the same identities, asserted on fixtures)
+//
+// All measures live in a dedicated `_Measures` table with displayFolder groups.
+//
+// TWO RULES THROUGHOUT
+//
+//   1. Everything numeric stays numeric. No TEXT(...) & " / " & TEXT(...) tiles,
+//      no "NA" sentinels, no "0 days" strings. Formatting is a visual concern;
+//      the moment a measure returns text it can no longer be summed, compared,
+//      or conditionally formatted.
+//
+//   2. Anchor to the SELECTED reporting date, never to TODAY(). A measure built
+//      on the system clock reports a different number every time it is opened,
+//      which makes an exported or saved report impossible to reconcile against
+//      the month it claims to describe.
+
+// ============================================================ 01 Contract & Change
+
+/// Original prime contract value, before any change orders.
+Original Contract = SUM ( fct_WIP[OriginalContract] )
+    formatString: "$#,0"
+
+/// Approved prime change orders, CUMULATIVE.
+/// Rolling these up per-month rather than cumulatively is the defect that
+/// understated portfolio contract value by 16% on the reference engagement:
+/// contract value silently reverted toward original in any quiet month.
+Approved Change Orders = SUM ( fct_WIP[ApprovedChangeOrders] )
+    formatString: "$#,0"
+
+/// Change orders submitted but not yet approved. Excluded from Revised Contract
+/// on purpose - unapproved work is exposure, not revenue.
+Pending Change Orders = SUM ( fct_WIP[PendingChangeOrders] )
+    formatString: "$#,0"
+
+Revised Contract = SUM ( fct_WIP[RevisedContract] )
+    formatString: "$#,0"
+
+Contract Growth % = DIVIDE ( [Approved Change Orders], [Original Contract] )
+    formatString: "0.0%"
+
+// ============================================================ 02 Budget & Cost
+
+Original Budget = SUM ( fct_WIP[OriginalBudget] )
+    formatString: "$#,0"
+
+Revised Budget = SUM ( fct_WIP[RevisedBudget] )
+    formatString: "$#,0"
+
+Committed Cost = SUM ( fct_WIP[CommittedCost] )
+    formatString: "$#,0"
+
+/// Job-to-date cost per Procore. The reporting number.
+Cost to Date = SUM ( fct_WIP[CostToDate] )
+    formatString: "$#,0"
+
+/// Estimated cost at completion. Floors at revised budget in the gold build,
+/// because a budget view that has never been forecast reports zero - which
+/// would make percent complete infinite.
+EAC = SUM ( fct_WIP[EAC] )
+    formatString: "$#,0"
+
+Cost to Complete = SUM ( fct_WIP[CostToComplete] )
+    formatString: "$#,0"
+
+/// DIVIDE of the two totals, not an average of the per-project percentages.
+/// Averaging percentages weights a $40k job the same as a $4M one, and the
+/// portfolio number comes out wrong in a way that looks plausible.
+Percent Complete = DIVIDE ( [Cost to Date], [EAC] )
+    formatString: "0.0%"
+
+// ============================================================ 03 Revenue & Margin
+
+/// Cost-to-cost percentage of completion.
+/// SUMX over projects, not a portfolio-level multiplication: each project earns
+/// at its OWN percent complete. Multiplying total contract by total percent
+/// complete is a different - and wrong - number whenever projects differ.
+Earned Revenue =
+    SUMX ( VALUES ( fct_WIP[ProjectKey] ), CALCULATE ( SUM ( fct_WIP[EarnedRevenue] ) ) )
+    formatString: "$#,0"
+
+Gross Profit at Completion = SUM ( fct_WIP[GrossProfitAtCompletion] )
+    formatString: "$#,0"
+
+GP % at Completion = DIVIDE ( [Gross Profit at Completion], [Revised Contract] )
+    formatString: "0.0%"
+
+Earned Gross Profit = SUM ( fct_WIP[EarnedGrossProfit] )
+    formatString: "$#,0"
+
+Earned GP % = DIVIDE ( [Earned Gross Profit], [Earned Revenue] )
+    formatString: "0.0%"
+
+/// Fade (negative) or gain (positive) in forecast margin against the prior
+/// month. The single most watched number in contractor reporting: a job whose
+/// margin is quietly eroding month over month is the one that hurts.
+Fade Gain =
+    VAR CurrentGP = [GP % at Completion]
+    VAR PriorGP =
+        CALCULATE ( [GP % at Completion], DATEADD ( dim_Date[Date], -1, MONTH ) )
+    RETURN
+        IF ( NOT ISBLANK ( PriorGP ), CurrentGP - PriorGP )
+    formatString: "0.00%"
+
+// ============================================================ 04 Billing & Backlog
+
+Billed to Date = SUM ( fct_WIP[BilledToDate] )
+    formatString: "$#,0"
+
+/// Billings in excess of costs - a LIABILITY. Kept separate from under-billing
+/// rather than netted, because netting them to one signed number loses the
+/// balance-sheet distinction the Controller needs.
+Over Billing = SUM ( fct_WIP[OverBilling] )
+    formatString: "$#,0"
+
+/// Costs in excess of billings - an ASSET, and usually a cash-flow problem.
+Under Billing = SUM ( fct_WIP[UnderBilling] )
+    formatString: "$#,0"
+
+Net Over Under Billing = [Over Billing] - [Under Billing]
+    formatString: "$#,0"
+
+/// Revised contract not yet earned. What the company still has to build.
+Backlog = SUM ( fct_WIP[Backlog] )
+    formatString: "$#,0"
+
+/// Months of work remaining at the trailing-three-month burn rate.
+/// Guarded against a zero burn, which would otherwise return infinity and
+/// render as a blank tile that reads like missing data.
+Backlog Months =
+    VAR Burn =
+        DIVIDE (
+            CALCULATE (
+                [Earned Revenue],
+                DATESINPERIOD ( dim_Date[Date], MAX ( dim_Date[Date] ), -3, MONTH )
+            ),
+            3
+        )
+    RETURN
+        IF ( Burn > 0, DIVIDE ( [Backlog], Burn ) )
+    formatString: "0.0"
+
+// ============================================================ 05 Reconciliation
+
+/// Job cost per QuickBooks. Loaded alongside Procore, never blended with it.
+Cost to Date (QuickBooks) = SUM ( fct_WIP[CostToDateQbo] )
+    formatString: "$#,0"
+
+/// Procore minus QuickBooks. A non-zero value is a FINDING, not necessarily a
+/// bug: an AP invoice not yet entered, a cost coded to the wrong job, an accrual
+/// Procore does not know about.
+Cost Variance = [Cost to Date] - [Cost to Date (QuickBooks)]
+    formatString: "$#,0"
+
+Cost Variance % = DIVIDE ( [Cost Variance], [Cost to Date] )
+    formatString: "0.0%"
+
+Projects Unmapped = CALCULATE ( COUNTROWS ( dim_Project ), dim_Project[IsInCrosswalk] = FALSE )
+    formatString: "#,0"
+
+/// Contract value that cannot be reconciled to QuickBooks yet. This is the
+/// number that motivates finishing the crosswalk.
+Unmapped Contract Value =
+    CALCULATE ( SUM ( dim_Project[OriginalContract] ), dim_Project[IsInCrosswalk] = FALSE )
+    formatString: "$#,0"
+
+// ============================================================ 06 Risk & Exceptions
+
+Projects at Risk =
+    CALCULATE ( DISTINCTCOUNT ( fct_WIP[ProjectKey] ), fct_WIP[GrossProfitAtCompletion] < 0 )
+    formatString: "#,0"
+
+Projects Over EAC =
+    CALCULATE ( DISTINCTCOUNT ( fct_WIP[ProjectKey] ), fct_WIP[PercentCompleteRaw] > 1 )
+    formatString: "#,0"
+
+Cost Codes Over EAC = SUM ( fct_WIP[OverEacCostCodes] )
+    formatString: "#,0"
+
+/// Text label beside every RAG indicator.
+/// Red and green are separated by only dE 7.1 under deuteranopia - below the
+/// dE 8 legibility floor - so no status in this report is ever conveyed by
+/// colour alone. This measure is what the visual actually displays.
+Project Risk Label =
+    VAR GP = [GP % at Completion]
+    RETURN
+        SWITCH (
+            TRUE (),
+            ISBLANK ( GP ), "No forecast",
+            GP < 0, "At risk - forecast loss",
+            GP < 0.10, "Watch - thin margin",
+            "On track"
+        )
+
+// ============================================================ 07 Pipeline liveness
+//
+// The spreadsheet this replaces cannot say when it was last correct. A dashboard
+// silently showing three-week-old numbers is worse than one that is obviously
+// broken, because nobody stops trusting it.
+
+Last Successful Run = CALCULATE ( MAX ( meta_PipelineRun[RunAt] ), meta_PipelineRun[Succeeded] = TRUE )
+    formatString: "yyyy-mm-dd hh:nn"
+
+Hours Since Last Run =
+    VAR LastRun = [Last Successful Run]
+    RETURN
+        IF ( NOT ISBLANK ( LastRun ), DATEDIFF ( LastRun, UTCNOW (), HOUR ) )
+    formatString: "0"
+
+Pipeline Status =
+    VAR Hrs = [Hours Since Last Run]
+    RETURN
+        SWITCH (
+            TRUE (),
+            ISBLANK ( Hrs ), "Never completed a successful run",
+            Hrs <= 30, "Current",
+            Hrs <= 72, "Late - no run in over a day",
+            "STALE - these numbers may be weeks old"
+        )
+
+Blocking DQ Failures =
+    CALCULATE (
+        COUNTROWS ( meta_DataQuality ),
+        meta_DataQuality[Severity] = "error",
+        meta_DataQuality[Passed] = FALSE
+    )
+    formatString: "#,0"
+
+DQ Warnings =
+    CALCULATE (
+        COUNTROWS ( meta_DataQuality ),
+        meta_DataQuality[Severity] = "warn",
+        meta_DataQuality[Passed] = FALSE
+    )
+    formatString: "#,0"
