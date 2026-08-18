@@ -27,3 +27,6 @@ venv/
 # OS
 Thumbs.db
 .DS_Store
+
+# Client correspondence - not for a public repository
+Request.txt
