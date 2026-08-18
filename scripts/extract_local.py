@@ -171,9 +171,19 @@ def extract_qbo(batch_id: str, only: str | None, _: int | None) -> list[tuple]:
     )
     headers = qx.build_headers(tokens.access_token)
 
-    print("NOTE: the refresh token just ROTATED. The new one is:")
-    print(f"      {tokens.refresh_token}")
-    print("      Update .env (or dl_meta_token) with it - the old one is dead.\n")
+    # PERSIST, NEVER PRINT. QuickBooks invalidates the previous refresh token on
+    # every use, so the replacement must be saved or the next run fails. But
+    # printing it puts a live credential into terminal scrollback, CI logs, and
+    # anything that scrapes either. Save it; report only that it happened.
+    env_path = fc.find_dotenv(str(ROOT))
+    if not env_path:
+        raise RuntimeError(
+            "The refresh token rotated but there is no .env to save it to. "
+            "Refusing to continue: the previous token is now dead and the new one "
+            "would be lost, leaving the integration unusable."
+        )
+    fc.update_dotenv(env_path, "QUICKBOOKS_REFRESH_TOKEN", tokens.refresh_token)
+    print(f"refresh token rotated and saved to {env_path}\n")
 
     with open(ROOT / "ingestion/qbo/config/entities.yml", encoding="utf-8") as handle:
         config = yaml.safe_load(handle)

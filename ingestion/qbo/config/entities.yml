@@ -123,9 +123,13 @@ reports:
     params:
       accounting_method: Accrual
 
-  - name: ARAgingDetail
+  - name: AgedReceivableDetail
+    # NOT "ARAgingDetail". Intuit's entity index lists the report under that
+    # name, but the REST path is /reports/AgedReceivableDetail - the other
+    # spelling returns 400. Confirmed against the live sandbox 2026-08-18.
     bronze_table: dl_bronze_qbo_ar_aging_detail
-    params: {}
+    params:
+      aging_method: Report_Date
 
   - name: TrialBalance
     bronze_table: dl_bronze_qbo_trial_balance

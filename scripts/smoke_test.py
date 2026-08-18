@@ -191,8 +191,17 @@ def smoke_qbo() -> bool:
         return False
 
     print(f"[{OK}] quickbooks: access token acquired")
-    print(f"[{OK}] quickbooks: NEW refresh token issued - {_mask(tokens.refresh_token)}")
-    print("          (the old one is now dead; the pipeline persists this to dl_meta_token)")
+
+    # PERSIST THE ROTATED TOKEN. QuickBooks invalidates the old one, so a
+    # diagnostic that refreshes without saving the replacement would leave .env
+    # holding a dead credential - i.e. checking the connection would break it.
+    env_path = fc.find_dotenv(str(ROOT))
+    if env_path:
+        fc.update_dotenv(env_path, "QUICKBOOKS_REFRESH_TOKEN", tokens.refresh_token)
+        print(f"[{OK}] quickbooks: rotated refresh token saved to {env_path}")
+    else:
+        print(f"[  warn] quickbooks: token rotated to {_mask(tokens.refresh_token)} "
+              "but no .env to save it to - the previous value is now stale")
 
     headers = qx.build_headers(tokens.access_token)
 
@@ -277,6 +286,8 @@ def _present(name: str) -> bool:
     except RuntimeError:
         return False
     return True
+
+
 
 
 SOURCES = {"procore": smoke_procore, "quickbooks": smoke_qbo, "hubspot": smoke_hubspot}

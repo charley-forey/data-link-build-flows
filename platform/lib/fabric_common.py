@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import pathlib
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Iterable, Sequence
@@ -132,6 +133,30 @@ def find_dotenv(start: str | None = None, filename: str = ".env") -> str | None:
         if parent == here:  # reached the filesystem root
             return None
         here = parent
+
+
+def update_dotenv(path: str, key: str, value: str) -> None:
+    """Rewrite one key in a .env, in place, preserving everything else.
+
+    Needed because QuickBooks rotates its refresh token on EVERY use. Any tool
+    that refreshes a token and does not persist the new one leaves the file
+    holding a dead credential - so merely diagnosing the connection would break
+    it. Appending a duplicate line would be worse: the loader takes the first
+    occurrence, so the stale value would keep winning.
+    """
+    file = pathlib.Path(path)
+    lines = file.read_text(encoding="utf-8").splitlines() if file.exists() else []
+    prefix = f"{key}="
+    replaced = False
+    for index, line in enumerate(lines):
+        if line.strip().startswith(prefix):
+            lines[index] = f"{key}={value}"
+            replaced = True
+            break
+    if not replaced:
+        lines.append(f"{key}={value}")
+    file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    os.environ[key] = value
 
 
 def load_dotenv_upwards(start: str | None = None) -> str | None:
