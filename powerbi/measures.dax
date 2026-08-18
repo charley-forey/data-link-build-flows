@@ -60,7 +60,7 @@ Cost to Date = SUM ( fct_WIP[CostToDate] )
 /// Estimated cost at completion. Floors at revised budget in the gold build,
 /// because a budget view that has never been forecast reports zero - which
 /// would make percent complete infinite.
-EAC = SUM ( fct_WIP[EAC] )
+Estimated Cost at Completion = SUM ( fct_WIP[EAC] )
     formatString: "$#,0"
 
 Cost to Complete = SUM ( fct_WIP[CostToComplete] )
@@ -69,7 +69,7 @@ Cost to Complete = SUM ( fct_WIP[CostToComplete] )
 /// DIVIDE of the two totals, not an average of the per-project percentages.
 /// Averaging percentages weights a $40k job the same as a $4M one, and the
 /// portfolio number comes out wrong in a way that looks plausible.
-Percent Complete = DIVIDE ( [Cost to Date], [EAC] )
+Percent Complete = DIVIDE ( [Cost to Date], [Estimated Cost at Completion] )
     formatString: "0.0%"
 
 // ============================================================ 03 Revenue & Margin
@@ -124,7 +124,7 @@ Net Over Under Billing = [Over Billing] - [Under Billing]
     formatString: "$#,0"
 
 /// Revised contract not yet earned. What the company still has to build.
-Backlog = SUM ( fct_WIP[Backlog] )
+Backlog Value = SUM ( fct_WIP[Backlog] )
     formatString: "$#,0"
 
 /// Months of work remaining at the trailing-three-month burn rate.
@@ -140,7 +140,7 @@ Backlog Months =
             3
         )
     RETURN
-        IF ( Burn > 0, DIVIDE ( [Backlog], Burn ) )
+        IF ( Burn > 0, DIVIDE ( [Backlog Value], Burn ) )
     formatString: "0.0"
 
 // ============================================================ 05 Reconciliation
@@ -158,7 +158,7 @@ Cost Variance = [Cost to Date] - [Cost to Date (QuickBooks)]
 Cost Variance % = DIVIDE ( [Cost Variance], [Cost to Date] )
     formatString: "0.0%"
 
-Projects Unmapped = CALCULATE ( COUNTROWS ( dim_Project ), dim_Project[IsInCrosswalk] = FALSE )
+Projects Unmapped = COALESCE ( CALCULATE ( COUNTROWS ( dim_Project ), dim_Project[IsInCrosswalk] = FALSE ), 0 )
     formatString: "#,0"
 
 /// Contract value that cannot be reconciled to QuickBooks yet. This is the
@@ -169,12 +169,21 @@ Unmapped Contract Value =
 
 // ============================================================ 06 Risk & Exceptions
 
+/// Count measures COALESCE to zero. A blank KPI tile reads as "no data" when
+/// the answer is "none" - which is exactly the wrong impression on an
+/// exceptions card.
 Projects at Risk =
-    CALCULATE ( DISTINCTCOUNT ( fct_WIP[ProjectKey] ), fct_WIP[GrossProfitAtCompletion] < 0 )
+    COALESCE (
+        CALCULATE ( DISTINCTCOUNT ( fct_WIP[ProjectKey] ), fct_WIP[GrossProfitAtCompletion] < 0 ),
+        0
+    )
     formatString: "#,0"
 
 Projects Over EAC =
-    CALCULATE ( DISTINCTCOUNT ( fct_WIP[ProjectKey] ), fct_WIP[PercentCompleteRaw] > 1 )
+    COALESCE (
+        CALCULATE ( DISTINCTCOUNT ( fct_WIP[ProjectKey] ), fct_WIP[PercentCompleteRaw] > 1 ),
+        0
+    )
     formatString: "#,0"
 
 Cost Codes Over EAC = SUM ( fct_WIP[OverEacCostCodes] )
@@ -222,17 +231,17 @@ Pipeline Status =
         )
 
 Blocking DQ Failures =
-    CALCULATE (
+    COALESCE ( CALCULATE (
         COUNTROWS ( meta_DataQuality ),
         meta_DataQuality[Severity] = "error",
         meta_DataQuality[Passed] = FALSE
-    )
+    ), 0 )
     formatString: "#,0"
 
 DQ Warnings =
-    CALCULATE (
+    COALESCE ( CALCULATE (
         COUNTROWS ( meta_DataQuality ),
         meta_DataQuality[Severity] = "warn",
         meta_DataQuality[Passed] = FALSE
-    )
+    ), 0 )
     formatString: "#,0"
