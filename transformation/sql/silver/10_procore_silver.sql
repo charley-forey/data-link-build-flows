@@ -129,55 +129,79 @@ WITH parsed AS (
         TRIM(get_json_object(payload, '$.biller'))                   AS biller,
         TRIM(get_json_object(payload, '$.biller_type'))              AS biller_type,
 
+        -- BRACKET NOTATION IS MANDATORY for the configured money columns.
+        -- Procore names them "Job to Date Costs", with spaces, and
+        -- get_json_object('$.Job to Date Costs') does not parse - it returns
+        -- NULL, which COALESCEs to 0 and produces a WIP schedule that is
+        -- internally consistent and entirely wrong. Verified against the live
+        -- tenant 2026-08-18; tests/test_silver_keys.py pins the exact spellings.
         CAST(COALESCE(
             get_json_object(payload, '$.original_budget_amount'),
-            get_json_object(payload, '$.Original Budget Amount'),
+            get_json_object(payload, "$['Original Budget Amount']"),
             '0') AS DOUBLE)                                          AS original_budget,
 
-        CAST(COALESCE(
-            get_json_object(payload, '$.budget_modifications'),
-            get_json_object(payload, '$.Budget Modifications'),
-            '0') AS DOUBLE)                                          AS budget_modifications,
+        -- No "Budget Modifications" column exists on this view. Kept at zero so
+        -- the revised-budget fallback arithmetic stays well defined.
+        CAST(0 AS DOUBLE)                                            AS budget_modifications,
 
         CAST(COALESCE(
-            get_json_object(payload, '$.approved_cos'),
-            get_json_object(payload, '$.Approved Change Orders'),
+            get_json_object(payload, "$['Approved Budget Changes']"),
+            get_json_object(payload, '$.approved_budget_changes'),
             '0') AS DOUBLE)                                          AS approved_budget_changes,
 
         CAST(COALESCE(
+            get_json_object(payload, "$['Approved COs']"), '0') AS DOUBLE)
+                                                                     AS approved_change_orders,
+
+        CAST(COALESCE(
+            get_json_object(payload, "$['Pending COs']"), '0') AS DOUBLE)
+                                                                     AS pending_change_orders,
+
+        CAST(COALESCE(
+            get_json_object(payload, "$['Revised Budget']"),
             get_json_object(payload, '$.revised_budget'),
-            get_json_object(payload, '$.Revised Budget'),
             '0') AS DOUBLE)                                          AS revised_budget,
 
         CAST(COALESCE(
+            get_json_object(payload, "$['Committed Costs']"),
             get_json_object(payload, '$.committed_costs'),
-            get_json_object(payload, '$.Committed Costs'),
             '0') AS DOUBLE)                                          AS committed_cost,
 
         CAST(COALESCE(
+            get_json_object(payload, "$['Direct Costs']"),
             get_json_object(payload, '$.direct_costs'),
-            get_json_object(payload, '$.Direct Costs'),
             '0') AS DOUBLE)                                          AS direct_cost,
 
         CAST(COALESCE(
+            get_json_object(payload, "$['Job to Date Costs']"),
             get_json_object(payload, '$.job_to_date_costs'),
-            get_json_object(payload, '$.Job to Date Costs'),
             '0') AS DOUBLE)                                          AS job_to_date_cost,
 
         CAST(COALESCE(
+            get_json_object(payload, "$['Estimated Cost at Completion']"),
             get_json_object(payload, '$.estimated_cost_at_completion'),
-            get_json_object(payload, '$.budget_forecast.amount'),
-            get_json_object(payload, '$.Estimated Cost at Completion'),
             '0') AS DOUBLE)                                          AS estimated_cost_at_completion,
 
         CAST(COALESCE(
-            get_json_object(payload, '$.forecast_to_complete'),
-            get_json_object(payload, '$.Forecast To Complete'),
-            '0') AS DOUBLE)                                          AS forecast_to_complete,
+            get_json_object(payload, "$['Projected Costs']"), '0') AS DOUBLE)
+                                                                     AS projected_costs,
 
         CAST(COALESCE(
-            get_json_object(payload, '$.projected_over_under'),
-            get_json_object(payload, '$.Projected Over Under'),
+            get_json_object(payload, "$['Projected Budget']"), '0') AS DOUBLE)
+                                                                     AS projected_budget,
+
+        -- Forecast to complete is not a column on this view; Procore exposes the
+        -- forecast as an object. automatic_amount is the system forecast,
+        -- manual_amount the PM override.
+        CAST(COALESCE(
+            get_json_object(payload, '$.budget_forecast.manual_amount'),
+            get_json_object(payload, '$.budget_forecast.automatic_amount'),
+            '0') AS DOUBLE)                                          AS forecast_to_complete,
+
+        -- Note the lowercase "over" - this is Procore's spelling, not a typo.
+        CAST(COALESCE(
+            get_json_object(payload, "$['Projected over Under']"),
+            get_json_object(payload, "$['Projected Over Under']"),
             '0') AS DOUBLE)                                          AS projected_over_under,
 
         _ingested_at,
@@ -195,9 +219,11 @@ WITH parsed AS (
 SELECT
     budget_line_id, project_id, wbs_code_id, cost_code_id, cost_code,
     root_cost_code_id, root_cost_code, category_id, category, biller, biller_type,
-    original_budget, budget_modifications, approved_budget_changes, revised_budget,
+    original_budget, budget_modifications, approved_budget_changes,
+    approved_change_orders, pending_change_orders, revised_budget,
     committed_cost, direct_cost, job_to_date_cost, estimated_cost_at_completion,
-    forecast_to_complete, projected_over_under, _ingested_at, _batch_id
+    projected_costs, projected_budget, forecast_to_complete, projected_over_under,
+    _ingested_at, _batch_id
 FROM (
     SELECT parsed.*,
            ROW_NUMBER() OVER (

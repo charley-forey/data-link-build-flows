@@ -137,6 +137,7 @@ import fabric_common as fc
 import scope as sc
 import procore_extract as px
 import watermark as wm
+from procore_extract import ToolUnavailable
 from ratelimit import RateLimitedSession, QuotaExhausted
 
 CONFIG = f"{LIB}/config/procore_endpoints.yml"
@@ -192,24 +193,33 @@ for endpoint in ordered:
     base_params = px.endpoint_params(endpoint, settings.company_id, since)
 
     records, rows = [], []
+    unavailable = 0
     ingested_at = fc.utc_now()
     try:
         for path, project_id in sc.expand_paths(
             endpoint, settings.company_id, project_ids, parent_pairs
         ):
             params = {**base_params, **px.implicit_params(endpoint, settings.company_id, project_id)}
-            for record in px.iter_records(
-                session, settings.base_url, path, headers, params=params, unwrap=endpoint.unwrap
-            ):
-                # Carry the project id onto the record so a child endpoint can
-                # pair (parent_id, project_id) correctly.
-                record.setdefault("_project_id", project_id)
-                records.append(record)
-                rows.append({
-                    **px.to_bronze_row(record, endpoint, project_id, ingested_at),
-                    "_batch_id": batch_id,
-                    "_row_hash": fc.row_hash(record),
-                })
+            try:
+                for record in px.iter_records(
+                    session, settings.base_url, path, headers, params=params,
+                    unwrap=endpoint.unwrap, tolerate_unavailable=True,
+                ):
+                    # Carry the project id onto the record so a child endpoint can
+                    # pair (parent_id, project_id) correctly.
+                    record.setdefault("_project_id", project_id)
+                    records.append(record)
+                    rows.append({
+                        **px.to_bronze_row(record, endpoint, project_id, ingested_at),
+                        "_batch_id": batch_id,
+                        "_row_hash": fc.row_hash(record),
+                    })
+            except ToolUnavailable:
+                # This project does not have the tool enabled. Counted and
+                # reported, never fatal - a company where three of ten projects
+                # use Financials is entirely normal, and failing the endpoint
+                # would lose the seven that do work.
+                unavailable += 1
     except QuotaExhausted as exc:
         # Stop cleanly rather than half-loading. Watermarks for endpoints already
         # done have advanced, so the next run resumes rather than restarting.
@@ -232,8 +242,10 @@ for endpoint in ordered:
             wm.write_watermark(spark, endpoint.bronze_table, endpoint.name, high, batch_id)
 
     fc.log_run(spark, batch_id, "extract_procore", endpoint.bronze_table, len(rows))
-    summary.append((endpoint.name, len(rows), "incremental" if since else "full"))
-    print(f"  {endpoint.name:32s} {len(rows):7,d} rows  ({summary[-1][2]})")
+    mode = "incremental" if since else "full"
+    summary.append((endpoint.name, len(rows), mode))
+    note = f"  ({unavailable} project(s) without this tool)" if unavailable else ""
+    print(f"  {endpoint.name:32s} {len(rows):7,d} rows  ({mode}){note}")
 '''
             ),
             cell(
@@ -674,8 +686,128 @@ print(f"\\n{len(created) + len(existing)} bronze and control tables ready")
     )
 
 
+def nb_land_to_bronze() -> dict:
+    return notebook(
+        [
+            cell(
+                "# dl_05_land_to_bronze\n"
+                "\n"
+                "Loads JSONL from `Files/_landing/<batch>/` into the bronze tables.\n"
+                "\n"
+                "**This notebook holds no credentials and needs none.** That is the whole\n"
+                "point of the split: extraction needs an API secret and runs wherever the\n"
+                "secret already lives; this half needs Spark and reads files.\n"
+                "\n"
+                "Use it when the source credentials are not in Key Vault yet. Once they\n"
+                "are, `dl_01_extract_procore` writes bronze directly and this becomes a\n"
+                "backfill and replay tool rather than the main path.\n"
+                "\n"
+                "The load is a MERGE on `_merge_key`, so re-running is a no-op and a\n"
+                "partially-uploaded batch can simply be uploaded again.",
+                "markdown",
+            ),
+            cell(
+                PRELUDE
+                + '''
+import glob
+import json
+import os
+
+from pyspark.sql import functions as F
+
+import fabric_common as fc
+
+LANDING = f"{LIB}/_landing"
+
+# Which batch to load. Empty means "the newest folder present", which is what
+# you want after uploading one batch; name it explicitly to replay an older one.
+BATCH = ""
+'''
+            ),
+            cell(
+                '''\
+batches = sorted(
+    d for d in glob.glob(f"{LANDING}/*") if os.path.isdir(d)
+)
+if not batches:
+    raise RuntimeError(
+        f"no batches under {LANDING}. Upload a folder produced by "
+        "scripts/extract_local.py before running this."
+    )
+
+target = f"{LANDING}/{BATCH}" if BATCH else batches[-1]
+files = sorted(glob.glob(f"{target}/*.jsonl"))
+print(f"batch {os.path.basename(target)}: {len(files)} file(s)")
+if not files:
+    raise RuntimeError(f"{target} contains no .jsonl files")
+'''
+            ),
+            cell(
+                '''\
+batch_id = fc.new_batch_id()
+summary = []
+
+for path in files:
+    table = os.path.splitext(os.path.basename(path))[0]
+
+    # Read as text and parse per line rather than spark.read.json on the folder:
+    # the landing files are small, and this keeps the bronze column order fixed
+    # regardless of which keys happen to appear in the first file Spark samples.
+    with open(path, encoding="utf-8") as handle:
+        rows = [json.loads(line) for line in handle if line.strip()]
+
+    if not rows:
+        print(f"  {table:48s} empty")
+        summary.append((table, 0))
+        continue
+
+    schema = (
+        "_key string, _project_id string, _merge_key string, _source_endpoint string, "
+        "_ingested_at timestamp, payload string, _batch_id string, _row_hash string"
+    )
+    tidy = [
+        (
+            r.get("_key"),
+            r.get("_project_id"),
+            r.get("_merge_key"),
+            r.get("_source_endpoint"),
+            None,  # _ingested_at is set below from the string, via a cast
+            r.get("payload"),
+            r.get("_batch_id"),
+            r.get("_row_hash"),
+        )
+        for r in rows
+    ]
+    df = spark.createDataFrame(tidy, schema)
+    # The landed timestamp is an ISO string; cast rather than trusting inference.
+    df = df.withColumn("_ingested_at", F.to_timestamp(F.lit(rows[0].get("_ingested_at"))))
+
+    written = fc.merge_delta(spark, df, table, ["_merge_key"])
+    fc.log_run(spark, batch_id, "land_to_bronze", table, written)
+    print(f"  {table:48s} {written:6,d} row(s)")
+    summary.append((table, written))
+'''
+            ),
+            cell(
+                DIAG_HELPER
+                + '''
+total = sum(n for _, n in summary)
+print(f"\\n{total:,} row(s) merged into bronze across {len(summary)} table(s)")
+write_diag("land_to_bronze", {
+    "batch_id": batch_id,
+    "source_batch": os.path.basename(target),
+    "tables": [{"table": t, "rows": n} for t, n in summary],
+})
+'''
+            ),
+        ],
+        "DL_Lakehouse",
+    )
+
+
 NOTEBOOKS = {
     "dl_00_bootstrap": nb_bootstrap,
+    "dl_05_land_to_bronze": nb_land_to_bronze,
     "dl_01_extract_procore": nb_extract_procore,
     "dl_02_extract_qbo": nb_extract_qbo,
     "dl_10_bronze_to_silver": nb_bronze_to_silver,

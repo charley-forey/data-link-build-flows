@@ -40,7 +40,16 @@ _ENV_ALIASES: dict[str, tuple[str, ...]] = {
     "PROCORE_CLIENT_SECRET": ("PROCORE_SANDBOX_CLIENT_SECRET", "PROCORE_SANBOX_CLIENT_SECRET"),
     "PROCORE_COMPANY_ID": ("PROCORE_SANDBOX_COMPANY_ID",),
     "PROCORE_BASE_URL": ("PROCORE_SANDBOX_URL",),
-    "HUBSPOT_PRIVATE_APP_TOKEN": ("HUBSPOT_API_KEY",),
+    # HubSpot issues three different credentials and only one of them works
+    # against the CRM REST APIs. Aliased in preference order so whichever is
+    # present is found, and check_token_shape() explains the difference.
+    "HUBSPOT_PRIVATE_APP_TOKEN": (
+        "HUBSPOT_ACCESS_TOKEN",
+        "HUBSPOT_SERVICE_KEY",
+        "HUBSPOT_PERSONAL_ACCESS_KEY",
+        "HUBSPOT_API_KEY",
+        "HUBSPOT_DEVELOPER_API_KEY",
+    ),
 }
 
 
@@ -104,6 +113,33 @@ def load_dotenv(path: str = ".env") -> None:
                 continue
             key, _, value = line.partition("=")
             os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+
+
+def find_dotenv(start: str | None = None, filename: str = ".env") -> str | None:
+    """Walk up from `start` looking for a .env, and return the first hit.
+
+    A fixed relative path breaks the moment the code runs from somewhere other
+    than the repo root - a git worktree sits several levels below the checkout
+    that actually holds the credentials, and CI runs from somewhere else again.
+    Walking up finds it without anyone having to know the depth.
+    """
+    here = os.path.abspath(start or os.getcwd())
+    while True:
+        candidate = os.path.join(here, filename)
+        if os.path.exists(candidate):
+            return candidate
+        parent = os.path.dirname(here)
+        if parent == here:  # reached the filesystem root
+            return None
+        here = parent
+
+
+def load_dotenv_upwards(start: str | None = None) -> str | None:
+    """Find and load the nearest .env above `start`. Returns the path used."""
+    path = find_dotenv(start)
+    if path:
+        load_dotenv(path)
+    return path
 
 
 # ---------------------------------------------------------------- batch identity

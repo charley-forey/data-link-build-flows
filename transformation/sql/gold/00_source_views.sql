@@ -53,6 +53,10 @@ SELECT
     -- SILENTLY - it appears as a missing table, not an error.
     CAST(original_budget              AS DOUBLE) AS original_budget,
     CAST(approved_budget_changes      AS DOUBLE) AS approved_budget_changes,
+    CAST(approved_change_orders       AS DOUBLE) AS approved_change_orders,
+    CAST(pending_change_orders        AS DOUBLE) AS pending_change_orders,
+    CAST(projected_costs              AS DOUBLE) AS projected_costs,
+    CAST(projected_budget             AS DOUBLE) AS projected_budget,
     CAST(budget_modifications         AS DOUBLE) AS budget_modifications,
     CAST(revised_budget               AS DOUBLE) AS revised_budget,
     CAST(committed_cost               AS DOUBLE) AS committed_cost,

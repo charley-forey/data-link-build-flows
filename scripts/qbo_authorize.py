@@ -38,7 +38,7 @@ import argparse
 import base64
 import http.server
 import json
-import os
+import pathlib
 import secrets
 import socketserver
 import sys
@@ -51,7 +51,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "platform" / "lib"))
 
-from fabric_common import get_secret, load_dotenv  # noqa: E402
+from fabric_common import get_secret, load_dotenv_upwards  # noqa: E402
 
 AUTH_URL = "https://appcenter.intuit.com/connect/oauth2"
 TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
@@ -123,8 +123,13 @@ def exchange(code: str, client_id: str, client_secret: str) -> dict:
         return json.loads(response.read().decode("utf-8"))
 
 
-def append_env(refresh_token: str, realm_id: str, environment: str) -> None:
-    env_path = ROOT.parent / ".env" if (ROOT.parent / ".env").exists() else ROOT / ".env"
+def append_env(refresh_token: str, realm_id: str, environment: str, env_path: str | None) -> None:
+    """Append the new credentials to the .env we actually read from.
+
+    Writing to a guessed path is how you end up with two .env files and an hour
+    wondering why the token you just obtained is not being picked up.
+    """
+    target = pathlib.Path(env_path) if env_path else ROOT / ".env"
     lines = [
         "",
         "# Written by scripts/qbo_authorize.py. The refresh token ROTATES on every",
@@ -135,9 +140,9 @@ def append_env(refresh_token: str, realm_id: str, environment: str) -> None:
         f"QUICKBOOKS_ENVIRONMENT={environment}",
         "",
     ]
-    with open(env_path, "a", encoding="utf-8") as handle:
+    with open(target, "a", encoding="utf-8") as handle:
         handle.write("\n".join(lines))
-    print(f"\nAppended to {env_path}")
+    print(f"\nAppended to {target}")
 
 
 def main() -> int:
@@ -151,8 +156,8 @@ def main() -> int:
     args = parser.parse_args()
     environment = "production" if args.production else "sandbox"
 
-    load_dotenv(str(ROOT / ".env"))
-    load_dotenv(str(ROOT.parent / ".env"))
+    env_path = load_dotenv_upwards(str(ROOT))
+    print(f"credentials from: {env_path or '(environment only)'}\n")
 
     try:
         client_id = get_secret("QUICKBOOKS_CLIENT_ID")
@@ -205,7 +210,7 @@ def main() -> int:
     )
 
     if not args.no_write:
-        append_env(refresh_token, realm_id, environment)
+        append_env(refresh_token, realm_id, environment, env_path)
         print("\nNext: run dl_02_extract_qbo in Fabric, or set the same values in Key Vault.")
 
     return 0

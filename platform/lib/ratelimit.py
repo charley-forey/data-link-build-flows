@@ -29,8 +29,31 @@ RETRYABLE_STATUS = frozenset({429, 500, 502, 503, 504})
 
 # Stop this many requests short of the limit, so a retry (and the next run's
 # token exchange) still has room to land.
+#
+# This is a CEILING, not a fixed value - see `effective_reserve`. Procore's
+# quota is not one number: a production tenant reports a large hourly budget,
+# while the sandbox measured 2026-08-18 reports limit=25 on a window that
+# resets in about ten seconds. A flat reserve of 20 against a limit of 25 gates
+# after five requests and then sleeps on every sixth, which turns a two-minute
+# extraction into an hour.
 RESERVE = 20
+
+# Never reserve more than this fraction of the reported limit.
+RESERVE_FRACTION = 5  # i.e. at most 1/5th of the limit
+MIN_RESERVE = 2  # always leave room for a retry
+
 MAX_SLEEP = 2400  # 40 minutes; longer than this and we would rather fail loudly
+
+
+def effective_reserve(limit: int | None, configured: int = RESERVE) -> int:
+    """How much headroom to keep, scaled to the quota actually reported.
+
+    With a large limit this is just `configured`. With a small one it shrinks,
+    so a tight window is used efficiently instead of being spent on waiting.
+    """
+    if not limit or limit <= 0:
+        return configured
+    return max(MIN_RESERVE, min(configured, limit // RESERVE_FRACTION))
 
 LIMIT_HEADER = "X-Rate-Limit-Limit"
 REMAINING_HEADER = "X-Rate-Limit-Remaining"
@@ -120,7 +143,8 @@ class RateLimitedSession:
 
     def _gate(self) -> None:
         """Block or raise before spending a request we do not have."""
-        if self.remaining is None or self.remaining > self.reserve:
+        reserve = effective_reserve(self.limit, self.reserve)
+        if self.remaining is None or self.remaining > reserve:
             return
         wait_for = self._seconds_until_reset()
         if not self.wait or wait_for > MAX_SLEEP:

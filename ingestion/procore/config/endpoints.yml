@@ -33,8 +33,17 @@
 #   value would be quietly wrong rather than obviously missing.
 #
 # RATE LIMIT
-#   600 requests/hour/client. Project-scoped endpoints multiply by the number of
-#   ACTIVE projects, so every entry below that could be company-scoped, is.
+#   DO NOT assume a number here - read it from the response headers.
+#
+#   Measured against this sandbox on 2026-08-18: `x-rate-limit-limit: 25` on a
+#   window that resets in about ten seconds. That is a very different shape from
+#   the "600 per hour" figure quoted for production tenants, and code tuned for
+#   one behaves badly on the other - which is why RateLimitedSession scales its
+#   reserve to the limit the API actually reports rather than to a constant.
+#
+#   Project-scoped endpoints multiply by the number of ACTIVE projects, so every
+#   entry below that could be company-scoped, is. With 10 active projects the
+#   project-scoped entries here cost roughly 130 requests per full run.
 
 endpoints:
 
@@ -48,7 +57,10 @@ endpoints:
     incremental: filters[updated_at]
 
   - name: vendors
-    path: /rest/v1.0/companies/{company_id}/vendors
+    # /rest/v1.0/vendors, company-scoped by QUERY parameter. The
+    # /companies/{id}/vendors form returns 404 - confirmed against the live
+    # sandbox 2026-08-18.
+    path: /rest/v1.0/vendors
     scope: company
     api_version: "1.0"
     bronze_table: dl_bronze_procore_vendors
@@ -111,7 +123,7 @@ endpoints:
       # which view happened to come back first. Confirm the exact name with the
       # Controller before the first production run - this is open item #2.
       where_field: name
-      where_value: "Data Link Standard Budget View"
+      where_value: "Procore Standard Budget"
 
   - name: budget_detail_columns
     path: /rest/v1.0/budget_views/{parent_id}/budget_detail_columns
@@ -122,7 +134,7 @@ endpoints:
       endpoint: budget_views
       field: id
       where_field: name
-      where_value: "Data Link Standard Budget View"
+      where_value: "Procore Standard Budget"
 
   - name: manual_forecast_line_items
     path: /rest/v1.0/projects/{project_id}/manual_forecast_line_items

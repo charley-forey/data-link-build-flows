@@ -31,6 +31,29 @@ MAX_PER_PAGE = 1000
 MAX_PAGES = 1000
 
 
+def normalise_base_url(raw: str) -> str:
+    """Reduce whatever was configured to a bare API origin.
+
+    People configure this by copying the address bar, which yields something
+    like `https://sandbox.procore.com/4265679/company/home`. Left alone, every
+    request is then built as `.../company/home/rest/v1.0/...` and the failure is
+    a 404 that looks like a bad endpoint rather than a bad base URL.
+
+    Keeping only scheme://host makes that class of mistake impossible.
+    """
+    from urllib.parse import urlparse
+
+    text = (raw or "").strip().rstrip("/")
+    if not text:
+        return "https://sandbox.procore.com"
+    if "//" not in text:
+        text = f"https://{text}"
+    parsed = urlparse(text)
+    if not parsed.netloc:
+        return "https://sandbox.procore.com"
+    return f"{parsed.scheme or 'https'}://{parsed.netloc}"
+
+
 @dataclass(frozen=True)
 class Settings:
     """Connection settings. Never holds a token - tokens are fetched, not stored."""
@@ -47,7 +70,9 @@ class Settings:
 
 def settings_from_secrets(get_secret: Callable[..., str]) -> Settings:
     return Settings(
-        base_url=get_secret("PROCORE_BASE_URL", default="https://sandbox.procore.com"),
+        base_url=normalise_base_url(
+            get_secret("PROCORE_BASE_URL", default="https://sandbox.procore.com")
+        ),
         client_id=get_secret("PROCORE_CLIENT_ID"),
         client_secret=get_secret("PROCORE_CLIENT_SECRET"),
         company_id=get_secret("PROCORE_COMPANY_ID"),
@@ -126,6 +151,19 @@ def unwrap_payload(payload: Any, key: str | None = None) -> list[dict]:
     return [payload] if payload else []
 
 
+# A Procore project that does not have a tool enabled answers 403 or 404 for
+# that tool's endpoints. It is a statement about configuration, not an error:
+# a company with ten projects where three use Financials is entirely normal.
+# Treating it as fatal means one such project takes down the whole endpoint for
+# every other project too.
+TOOL_UNAVAILABLE_STATUS = frozenset({403, 404})
+
+
+def status_of(exc: Exception) -> int | None:
+    response = getattr(exc, "response", None)
+    return getattr(response, "status_code", None) if response is not None else None
+
+
 def iter_records(
     session: Any,
     base_url: str,
@@ -135,12 +173,19 @@ def iter_records(
     per_page: int = MAX_PER_PAGE,
     unwrap: str | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    tolerate_unavailable: bool = False,
 ) -> Iterator[dict]:
     """Page through a list endpoint.
 
     Termination is driven by the RESPONSE - a short page, an empty page, or the
     `Total` header being reached. Never by an assumed page count, which silently
     truncates the moment the data grows.
+
+    With `tolerate_unavailable`, a 403/404 yields nothing instead of raising, so
+    a project without the tool is skipped rather than failing the endpoint. The
+    caller is expected to COUNT those skips and report them - silently swallowing
+    them would turn a permissions problem into "no data", which is exactly the
+    failure mode this codebase refuses everywhere else.
     """
     url = f"{base_url.rstrip('/')}{path}"
     seen = 0
@@ -150,7 +195,13 @@ def iter_records(
         page_params = dict(params or {})
         page_params.update({"page": page, "per_page": per_page})
 
-        response = request_with_retry(session, url, headers, page_params, sleep=sleep)
+        try:
+            response = request_with_retry(session, url, headers, page_params, sleep=sleep)
+        except Exception as exc:  # noqa: BLE001
+            if tolerate_unavailable and status_of(exc) in TOOL_UNAVAILABLE_STATUS:
+                raise ToolUnavailable(path, status_of(exc)) from exc
+            raise
+
         rows = unwrap_payload(response.json(), unwrap)
         if not rows:
             return
@@ -164,6 +215,15 @@ def iter_records(
             return
         if len(rows) < per_page:
             return
+
+
+class ToolUnavailable(RuntimeError):
+    """This project does not have the tool behind that endpoint enabled."""
+
+    def __init__(self, path: str, status: int | None) -> None:
+        self.path = path
+        self.status = status
+        super().__init__(f"{status} on {path} - tool not enabled for this project")
 
 
 def iter_active_projects(

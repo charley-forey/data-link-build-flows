@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CHECKS = [
     ("gold SQL + data-quality suite", ROOT / "tests" / "test_gold.py"),
     ("library unit tests", ROOT / "tests" / "test_lib.py"),
+    ("Procore budget column keys", ROOT / "tests" / "test_silver_keys.py"),
     ("notebook generation", ROOT / "scripts" / "make_notebooks.py"),
 ]
 

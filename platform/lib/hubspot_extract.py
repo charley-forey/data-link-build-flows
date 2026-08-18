@@ -19,6 +19,7 @@ Differences from the other two sources that the code has to encode:
 from __future__ import annotations
 
 import json
+import os
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -27,7 +28,18 @@ from typing import Any, Callable, Iterator, Sequence
 from ratelimit import request_with_retry
 
 BASE_URL = "https://api.hubapi.com"
-API_VERSION = "2026-03"
+
+# HubSpot moved from a single `v3` path to dated version groups. The local docs
+# mirror (scraped 2026-08-17) lists 2026-03 as current, but this is the one
+# thing here that silently rots as HubSpot publishes a new group, so it is
+# overridable without a code change. `v3` remains valid as a fallback.
+API_VERSION = os.environ.get("HUBSPOT_API_VERSION", "2026-03")
+
+# Private app tokens start `pat-`. A developer API key (`na2-...`) or an OAuth
+# access token will authenticate as neither, and the failure is a 401 that says
+# "Authentication credentials not found" - which reads like a missing header
+# rather than the wrong KIND of credential.
+PRIVATE_APP_TOKEN_PREFIX = "pat-"
 
 LIST_PAGE_SIZE = 100
 SEARCH_PAGE_SIZE = 200
@@ -48,6 +60,25 @@ class ObjectSpec:
     bronze_table: str
     properties: Sequence[str] = field(default_factory=tuple)
     associations: Sequence[str] = field(default_factory=tuple)
+
+
+def check_token_shape(token: str) -> str | None:
+    """Return a human explanation if this is the wrong KIND of credential.
+
+    Cheap to check, and it turns a confusing 401 into a sentence naming the fix.
+    """
+    if not token:
+        return "no HubSpot token configured"
+    if token.startswith(PRIVATE_APP_TOKEN_PREFIX):
+        return None
+    return (
+        f"this token starts {token[:4]!r}, not 'pat-'. HubSpot private app tokens "
+        "look like 'pat-na1-...'. A developer API key or an OAuth access token "
+        "will not authenticate against the CRM APIs. Create a Private App in "
+        "HubSpot (Settings > Integrations > Private Apps), grant it "
+        "crm.objects.deals.read / companies.read / contacts.read, and use its "
+        "access token."
+    )
 
 
 def build_headers(token: str) -> dict[str, str]:

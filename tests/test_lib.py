@@ -258,18 +258,33 @@ def test_retry_delay_units() -> None:
     check(ratelimit.retry_delay(_Response({}), 3) == 8.0, "exponential fallback")
 
 
+def test_effective_reserve_scales_to_the_limit() -> None:
+    # Measured 2026-08-18: the Procore sandbox reports limit=25 on a window that
+    # resets in about ten seconds. A flat reserve of 20 would gate after five
+    # requests and sleep on every sixth.
+    check(ratelimit.effective_reserve(25) == 5, ratelimit.effective_reserve(25))
+    # A large hourly quota keeps the configured headroom.
+    check(ratelimit.effective_reserve(3600) == 20, ratelimit.effective_reserve(3600))
+    # A tiny limit still leaves room for one retry.
+    check(ratelimit.effective_reserve(3) == 2, ratelimit.effective_reserve(3))
+    # Unknown limit falls back to the configured value.
+    check(ratelimit.effective_reserve(None) == 20, "unknown limit keeps the default")
+
+
 def test_quota_gate() -> None:
     slept: list[float] = []
     session = ratelimit.RateLimitedSession(
         session=None, reserve=20, wait=True, sleep=slept.append
     )
 
+    session.limit = 3600
     session.remaining = 500
     session._gate()
     check(not slept, "plenty of quota means no wait")
 
     # At the reserve floor it must wait for the reset rather than spend a
     # request it does not have - the reserve leaves room for a retry to land.
+    session.limit = 3600
     session.remaining = 5
     session.reset_epoch = datetime.now(timezone.utc).timestamp() + 10
     session._gate()
@@ -278,6 +293,7 @@ def test_quota_gate() -> None:
 
     # If waiting is not allowed, raise with the reset time rather than hang.
     strict = ratelimit.RateLimitedSession(session=None, reserve=20, wait=False)
+    strict.limit = 3600
     strict.remaining = 0
     strict.reset_epoch = datetime.now(timezone.utc).timestamp() + 10
     try:
