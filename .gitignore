@@ -1,0 +1,29 @@
+# Secrets - never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+token_cache.json
+
+# Large regenerable vendor artifacts.
+# api_docs/ is a local mirror of the Procore / QuickBooks / HubSpot developer
+# docs (160MB, the Procore OpenAPI spec alone is 52MB - over GitHub's 50MB
+# warning threshold). Regenerate with the scrapers rather than committing.
+api_docs/
+
+# Local pipeline output
+.local/
+_diag/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# OS
+Thumbs.db
+.DS_Store
