@@ -1,0 +1,9 @@
+{
+  "_comment": "Fabric MCP server, used for live exploration and deployment. Auth is DefaultAzureCredential - a plain `az login` with an account that has Fabric access. No secret is stored here. The [sql] extra needs the Microsoft ODBC Driver for SQL Server (17 or 18) installed locally; without it the server still starts, minus the SQL tools.",
+  "mcpServers": {
+    "fabric": {
+      "command": "uvx",
+      "args": ["--from", "ms-fabric-mcp-server[sql]", "ms-fabric-mcp-server"]
+    }
+  }
+}
