@@ -140,11 +140,63 @@ Surfaces bad data instead of letting it flow silently into a roll-up.
 
 ---
 
-## Phase 2 pages
+## 8 · Pipeline & Forecast
 
-Pipeline & Forecast (HubSpot), Cash Forecast, AR/Collections, Capacity Planning.
-All four sit on the same foundation; `sv_deals` is already declared as an empty
-typed view so the model compiles today and goes live by changing that one view.
+| Visual | Form | Notes |
+|---|---|---|
+| Header cards | 4 | Pipeline Value · Weighted Pipeline · Open Deals · Pipeline Confidence |
+| Pipeline by stage | funnel or sorted bar | Ordered by `DisplayOrder`, never alphabetically. Show weighted and unweighted side by side — the gap between them *is* the story. |
+| Weighted forecast by close month | column | `Weighted Pipeline` over `dim_Date`. Overlay `Backlog Value` as a second series so won work and possible work are visibly different things. |
+| Deals by owner | bar | |
+| Stale deals | table | `IsPastCloseDate` — open deals whose close date has passed. These quietly inflate the forecast by sitting in a month that has already gone. |
+
+**Do not add pipeline to backlog and call it revenue.** `Total Forward Work`
+exists for planning horizon, and the two components are always shown separately
+beside it.
+
+---
+
+## 9 · AR & Collections
+
+The Controller's chase list.
+
+| Visual | Form | Notes |
+|---|---|---|
+| Header cards | 4 | AR Outstanding · AR Overdue · AR Overdue % · Days Sales Outstanding |
+| Aging by bucket | column | Sorted by `AgingBucketSort`, because "Current" sorts after "1-30" alphabetically and a bucket chart in the wrong order is worse than none. |
+| Open invoices | table | Customer, invoice, due date, days past due, balance, project where mapped. Sortable, exportable — this is a worklist, not a picture. |
+| AR by project | bar | Only mapped customers resolve to a project; unmapped AR is still counted and shown as "Unattributed". |
+| Over 90 days | table | The collection-risk list, with `AR Over 90 Days` as a card. |
+
+---
+
+## 10 · Cash Forecast
+
+| Visual | Form | Notes |
+|---|---|---|
+| Header cards | 4 | Expected Collections · Expected Payments · Net Cash Movement · Net Working Capital |
+| Cash position | line | `Cumulative Cash Position` by week. **The trough matters more than the endpoint** — emphasise the minimum, not the final value. |
+| Weekly in/out | column, 2 series | Collections positive, Payments negative, on one axis around zero. |
+| Overdue exposure | table | Documents already past due, pulled into the current week because they are due *now*. |
+
+**State the basis on the page.** The `Cash Forecast Basis` measure renders as a
+footnote: committed AR and AP only, excluding unbilled backlog. A cash chart
+that silently includes modelled revenue is the most dangerous page in any
+finance report.
+
+---
+
+## 11 · Capacity
+
+Thinnest of the phase 2 pages, and honest about it — it rests on QuickBooks time
+entries only. Procore timecards would deepen it considerably.
+
+| Visual | Form | Notes |
+|---|---|---|
+| Header cards | 4 | Labour Hours · Billable Hours · Utilisation · Labour Margin |
+| Utilisation trend | line | By month |
+| Hours by worker | bar | Split employee vs subcontractor — owned capacity against bought capacity |
+| Unattributed hours | card + table | Hours that cannot be costed to a project |
 
 ---
 

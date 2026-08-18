@@ -166,7 +166,13 @@ SELECT
     CAST(t.hours AS DOUBLE)                     AS Hours,
     CAST(t.hours * t.cost_rate AS DOUBLE)       AS LabourCost,
     CAST(t.hours * t.billing_rate AS DOUBLE)    AS BillableValue,
-    CASE WHEN UPPER(COALESCE(t.billable_status, '')) LIKE 'BILLABLE%'
+    -- QBO's BillableStatus enum is exactly three values: Billable,
+    -- NotBillable, HasBeenBilled. HASBEENBILLED COUNTS AS BILLABLE - those are
+    -- hours already invoiced to a client, the most billable state there is.
+    -- Matched explicitly rather than with LIKE 'BILLABLE%', which catches
+    -- 'Billable' but silently misses 'HasBeenBilled' and understates
+    -- utilisation by every hour that has actually been billed.
+    CASE WHEN UPPER(COALESCE(t.billable_status, '')) IN ('BILLABLE', 'HASBEENBILLED')
          THEN TRUE ELSE FALSE END               AS IsBillable
 FROM sv_time_activities t
 LEFT JOIN sv_crosswalk x ON x.qbo_customer_id = t.qbo_customer_id AND x.is_mapped;

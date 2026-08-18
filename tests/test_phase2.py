@@ -85,7 +85,8 @@ CREATE OR REPLACE TABLE sv_ap_open AS SELECT * FROM (VALUES
 
 CREATE OR REPLACE TABLE sv_time_activities AS SELECT * FROM (VALUES
     ('t1','C1','w1','Sam Ortiz','Employee','Billable',DATE '{d(-7)}',8.0,45.0,120.0),
-    ('t2','C9','w1','Sam Ortiz','Employee','NotBillable',DATE '{d(-6)}',4.0,45.0,0.0)
+    ('t2','C9','w1','Sam Ortiz','Employee','NotBillable',DATE '{d(-6)}',4.0,45.0,0.0),
+    ('t3','C1','w2','Dana Reyes','Employee','HasBeenBilled',DATE '{d(-5)}',6.0,50.0,110.0)
 ) AS t(time_activity_id,qbo_customer_id,worker_id,worker_name,worker_type,billable_status,
        activity_date,hours,cost_rate,billing_rate);
 """
@@ -263,9 +264,16 @@ def main() -> int:
           "billable value uses the billing rate (8h x 120)")
     check(one(con, "SELECT IsBillable FROM fct_LabourHours WHERE LabourKey='t2'") is False,
           "NotBillable is not billable")
+    # HasBeenBilled is the MOST billable state - hours already invoiced. A
+    # LIKE 'BILLABLE%' pattern matches 'Billable' and silently misses this one,
+    # understating utilisation by every hour that has actually been billed.
+    check(one(con, "SELECT IsBillable FROM fct_LabourHours WHERE LabourKey='t3'") is True,
+          "HasBeenBilled counts as billable")
+    close(one(con, "SELECT SUM(Hours) FROM fct_LabourHours WHERE IsBillable"), 14.0,
+          "billable hours include both Billable and HasBeenBilled")
     check(one(con, "SELECT ProjectKey FROM fct_LabourHours WHERE LabourKey='t1'") == "P1",
           "labour on a mapped customer resolves to its project")
-    CHECKS_LOCAL += 4
+    CHECKS_LOCAL += 6
 
     CHECKS_LOCAL += check_expectations(con)
 
